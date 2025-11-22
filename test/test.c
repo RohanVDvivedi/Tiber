@@ -4,43 +4,42 @@
 #include<stdlib.h>
 #include<unistd.h>
 
-#define EXECUTOR_THREADS_COUNT 	2
-#define MAX_JOB_QUEUE_CAPACITY  UNBOUNDED_SYNC_QUEUE // JOB_QUEUE_AS_LINKEDLIST
+#define RUNTIME_THREADS_COUNT 	2
 #define STACK_SIZE              24*1024
 
 tiber tb1;
 tiber tb2;
 
-void tb1_func(void* p)
+void* tb1_func(void* p)
 {
 	printf("Hello 1\n");
 
-	yield_tiber();
+	tiber_yield();
 
 	printf("Rohan 1\n");
 
-	yield_tiber();
+	tiber_yield();
 
 	printf("Dvivedi 1\n");
 
-	yield_tiber();
+	tiber_yield();
 
-	kill_tiber();
+	return NULL;
 }
 
-void tb2_func(void* p)
+void* tb2_func(void* p)
 {
 	printf("Hello 2\n");
 
-	yield_tiber();
+	tiber_yield();
 
 	printf("Rohan 2\n");
 
-	yield_tiber();
+	tiber_yield();
 
 	printf("Dvivedi 2\n");
 
-	yield_tiber();
+	return NULL;
 }
 
 int MAX_COUNT = 10;
@@ -49,16 +48,20 @@ int curr = 0;
 tiber tb3;
 tiber tb4;
 
-pthread_mutex_t lock;
+tiber_mutex lock;
 tiber_cond wait;
 
-#define WAKEUP tiber_cond_signal // tiber_cond_broadcast
+#define WAKEUP tiber_cond_signal
 
-void tb3_func(void* p)
+#ifndef WAKEUP
+	#define WAKEUP tiber_cond_broadcast
+#endif
+
+void* tb3_func(void* p)
 {
 	while(1)
 	{
-		pthread_mutex_lock(&lock);
+		tiber_mutex_lock(&lock);
 
 		while(((curr % 2) != 1) && curr < MAX_COUNT)
 			tiber_cond_wait(&wait, &lock);
@@ -66,7 +69,7 @@ void tb3_func(void* p)
 		if(curr >= MAX_COUNT)
 		{
 			WAKEUP(&wait);
-			pthread_mutex_unlock(&lock);
+			tiber_mutex_unlock(&lock);
 			break;
 		}
 
@@ -75,15 +78,17 @@ void tb3_func(void* p)
 
 		WAKEUP(&wait);
 
-		pthread_mutex_unlock(&lock);
+		tiber_mutex_unlock(&lock);
 	}
+
+	return NULL;
 }
 
-void tb4_func(void* p)
+void* tb4_func(void* p)
 {
 	while(1)
 	{
-		pthread_mutex_lock(&lock);
+		tiber_mutex_lock(&lock);
 
 		while(((curr % 2) != 0) && curr < MAX_COUNT)
 			tiber_cond_wait(&wait, &lock);
@@ -91,7 +96,7 @@ void tb4_func(void* p)
 		if(curr >= MAX_COUNT)
 		{
 			WAKEUP(&wait);
-			pthread_mutex_unlock(&lock);
+			tiber_mutex_unlock(&lock);
 			break;
 		}
 
@@ -100,51 +105,28 @@ void tb4_func(void* p)
 
 		WAKEUP(&wait);
 
-		pthread_mutex_unlock(&lock);
+		tiber_mutex_unlock(&lock);
 	}
-}
 
-void start_up(void* additional_params)
-{
-	size_t stack_size;
-	pthread_attr_t attr;
-	pthread_getattr_np(pthread_self(), &attr);
-	pthread_attr_getstacksize(&attr, &stack_size);
-	pthread_attr_destroy(&attr);
-
-	printf("Worker thread started : with stack size of %zu\n", stack_size);
-}
-
-void clean_up(void* additional_params)
-{
-	printf("Worker thread completed\n");
+	return NULL;
 }
 
 int main()
 {
-	pthread_mutex_init(&lock, NULL);
+	tiber_mutex_init(&lock);
 	tiber_cond_init(&wait);
 
-	executor* executor_p = new_executor(FIXED_THREAD_COUNT_EXECUTOR, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, 1000, start_up, clean_up, NULL, STACK_SIZE);
+	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
 
-	initialize_and_run_tiber(&tb1, executor_p, tb1_func, NULL, 4096);
-	initialize_and_run_tiber(&tb2, executor_p, tb2_func, NULL, 4096);
-	initialize_and_run_tiber(&tb3, executor_p, tb3_func, NULL, 4096);
-	initialize_and_run_tiber(&tb4, executor_p, tb4_func, NULL, 4096);
+	tiber* tb1 = new_tiber(tr, tb1_func, NULL, 4096);
+	tiber* tb2 = new_tiber(tr, tb2_func, NULL, 4096);
+	tiber* tb3 = new_tiber(tr, tb3_func, NULL, 4096);
+	tiber* tb4 = new_tiber(tr, tb4_func, NULL, 4096);
 
 	// wait for 5 seconds
 	sleep(5);
 
-	shutdown_executor(executor_p, 0);
-	wait_for_all_executor_workers_to_complete(executor_p);
-	delete_executor(executor_p);
-
-	deinitialize_tiber(&tb1);
-	deinitialize_tiber(&tb2);
-	deinitialize_tiber(&tb3);
-	deinitialize_tiber(&tb4);
-
-	pthread_mutex_destroy(&lock);
+	tiber_mutex_destroy(&lock);
 	tiber_cond_destroy(&wait);
 
 	return 0;
