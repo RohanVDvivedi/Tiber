@@ -140,7 +140,8 @@ static inline int wake_up_waiting_tiber(tiber* tb)
 
 	pthread_spin_unlock(&(curr_tiber->state_lock));
 
-	queue_tiber_to_runime(tb);
+	if(result)
+		queue_tiber_to_runime(tb);
 
 	return result;
 }
