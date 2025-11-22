@@ -154,8 +154,16 @@ void* tb7_func(void* p)
 	tiber_mutex_unlock(&lock1);
 	printf("Unlocked for task 7 @ %lu\n", millis_since_start());
 
+	tiber_msleep(10);
+
 	tiber_mutex_lock(&lock1);
 	printf("Locked for task 7 @ %lu\n", millis_since_start());
+
+	tiber_msleep(3000);
+
+	WAKEUP(&wait1);
+
+	tiber_msleep(500);
 
 	WAKEUP(&wait1);
 
@@ -197,6 +205,15 @@ void* tb8_func(void* p)
 			printf("Locked for task 8 @ %lu\n", millis_since_start());
 			exit(-1);
 		}
+	}
+
+	{
+		struct timespec wait_until;
+		timespec_get(&wait_until, CLOCK_MONOTONIC);
+		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
+
+		int result = tiber_cond_timedwait(&wait1, &lock1, &wait_until);
+		printf("Woken up with ((result == ETIMEDOUT) -> %d, %d) for task 8 @ %lu\n", (result == ETIMEDOUT), result, millis_since_start());
 	}
 
 	{
