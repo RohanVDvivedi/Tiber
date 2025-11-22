@@ -73,6 +73,69 @@ static inline void switch_from_this_tiber_to_caller_thread()
 	}
 }
 
+static inline void queue_tiber_to_runime(tiber* tb)
+{
+	if(0 == submit_job_executor(tb->runtime->thread_pool, tiber_execute_wrapper, tb, NULL, NULL, BLOCKING))
+	{
+		printf("TIBER BUG: tiber was suppoed to be queued but it failed\n");
+		exit(-1);
+	}
+}
+
+static inline int wake_up_waiting_tiber(tiber* tb)
+{
+	int result = 0;
+
+	pthread_spin_lock(&(curr_tiber->state_lock));
+
+	if(tb->state == TIBER_WAITING)
+	{
+		result = 1;
+
+		tb->state = TIBER_QUEUED;
+
+		// discard from tiber_cond->waiters
+		if(tb->waiting_on_tiber_cond)
+		{
+			pthread_spin_lock(&(tb->waiting_on_tiber_cond->lock));
+
+			remove_from_linkedlist(&(tb->waiting_on_tiber_cond->waiters), tb);
+
+			pthread_spin_unlock(&(tb->waiting_on_tiber_cond->lock));
+
+			tb->waiting_on_tiber_cond = NULL;
+		}
+
+		// discard from tiber_mutex->waiters
+		if(tb->waiting_on_tiber_mutex)
+		{
+			pthread_spin_lock(&(tb->waiting_on_tiber_mutex->lock));
+
+			remove_from_linkedlist(&(tb->waiting_on_tiber_mutex->waiters), tb);
+
+			pthread_spin_unlock(&(tb->waiting_on_tiber_mutex->lock));
+
+			tb->waiting_on_tiber_mutex = NULL;
+		}
+
+		// discard from tiber_mutex->waiters
+		if(tb->is_timer_set)
+		{
+			pthread_spin_lock(&(tb->runtime->timer_lock));
+
+			remove_from_pheap(&(tb->runtime->timer_queue), tb);
+
+			pthread_spin_unlock(&(tb->runtime->timer_lock));
+
+			tb->is_timer_set = 0;
+		}
+	}
+
+	pthread_spin_unlock(&(curr_tiber->state_lock));
+
+	queue_tiber_to_runime(tb);
+}
+
 static inline uint64_t increment_tiber_reference_count(tiber* tb)
 {
 	pthread_spin_lock(&(tb->reference_count_lock));
