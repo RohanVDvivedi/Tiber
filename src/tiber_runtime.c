@@ -267,7 +267,30 @@ int tiber_mutex_trylock(tiber_mutex* tm)
 
 int tiber_mutex_lock(tiber_mutex* tm);
 int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time);
-int tiber_mutex_unlock(tiber_mutex* tm);
+
+int tiber_mutex_unlock(tiber_mutex* tm)
+{
+	// tiber to be woken up
+	tiber* tb = NULL;
+
+	pthread_spin_lock(&(tm->lock));
+
+	tm->is_locked = 0;
+
+	tb = (tiber*) get_head_of_linkedlist(&(tm->waiting_tibers));
+	if(tb != NULL)
+		increment_tiber_reference_count(tb);
+
+	pthread_spin_unlock(&(tm->lock));
+
+	if(tb != NULL)
+	{
+		wake_up_waiting_tiber(tb);
+		decrement_tiber_reference_count(tb);
+	}
+
+	return 0;
+}
 
 // tiber condtion variable functions
 
