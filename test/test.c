@@ -122,7 +122,7 @@ void* tb5_func(void* p)
 	for(int i = 0; i < 4; i++)
 	{
 		printf("Hola 5 @ %lu from %p\n", millis_since_start(), tiber_self());
-		tiber_sleep(i % 2);
+		tiber_sleep((i % 2) + 1);
 	}
 	printf("Hola 5 @ %lu from %p\n", millis_since_start(), tiber_self());
 
@@ -134,7 +134,7 @@ void* tb6_func(void* p)
 	for(int i = 0; i < 10; i++)
 	{
 		printf("Hola 6 @ %lu from %p\n", millis_since_start(), tiber_self());
-		tiber_msleep((i % 2) * 3 * 100);
+		tiber_msleep(((i % 2) + 1) * 3 * 100);
 	}
 	printf("Hola 6 @ %lu from %p\n", millis_since_start(), tiber_self());
 
