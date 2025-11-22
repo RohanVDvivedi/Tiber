@@ -108,13 +108,13 @@ uint64_t millis_since_start()
     static struct timespec start = {0};
 
     if (start.tv_sec == 0 && start.tv_nsec == 0)
-        timespec_get(&start, TIME_UTC);
+        timespec_get(&start, CLOCK_MONOTONIC);
 
     struct timespec now;
-    timespec_get(&now, TIME_UTC);
+    timespec_get(&now, CLOCK_MONOTONIC);
 
-    return (now.tv_sec - start.tv_sec) * 1000ULL +
-           (now.tv_nsec - start.tv_nsec) / 1000000ULL;
+    return (now.tv_sec - start.tv_sec) * 1000LL +
+           (now.tv_nsec - start.tv_nsec) / 1000000LL;
 }
 
 void* tb5_func(void* p)
