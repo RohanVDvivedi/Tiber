@@ -417,7 +417,24 @@ tiber* tiber_self(void)
 	return curr_tiber;
 }
 
-void tiber_exit(void);
-void tiber_yield(void);
+void tiber_exit(void)
+{
+	// we switched from the tiber to the caller thread in running state so it will definitely kill us
+	switch_from_this_tiber_to_caller_thread();
+}
+
+void tiber_yield(void)
+{
+	// first put this tiber in queued state
+	pthread_spin_lock(&(curr_tiber->state_lock));
+	curr_tiber->state = TIBER_QUEUED;
+	pthread_spin_unlock(&(curr_tiber->state_lock));
+
+	// then actually queue it
+	queue_tiber_to_runime(curr_tiber);
+
+	// now since we must yield, switch back to the caller thread of the run time
+	switch_from_this_tiber_to_caller_thread();
+}
 
 void tiber_sleep(const struct timespec *abs_time);
