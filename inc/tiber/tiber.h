@@ -101,16 +101,16 @@ struct tiber
 	tiber_state state;
 
 	// for tiber_cond
-	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock
+	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock and tiber_cond->lock (having just 1 lock allows us to safely read it, though)
 	llnode embed_node_for_tiber_cond_waiters;	// protected by the tiber_cond->lock
 
 	// for tiber_mutex
-	tiber_mutex* waiting_on_tiber_mutex;		// protected by the tiber_state_lock
+	tiber_mutex* waiting_on_tiber_mutex;		// protected by the tiber_state_lock and tiber_mutex->lock (having just 1 lock allows us to safely read it, though)
 	llnode embed_node_for_tiber_mutex_waiters;	// protected by the tiber_mutex->lock
 
 	// this will be set for a timer based waiting tiber
-	int is_timer_set;							// protected by the tiber_state_lock
-	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock
+	int is_timer_set;							// protected by the tiber_state_lock and tiber_runtime->timer_lock (having just 1 lock allows us to safely read it, though)
+	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock and tiber_runtime->timer_lock (having just 1 lock allows us to safely read it, though)
 	phpnode embed_node_for_tiber_timer_queue;	// protected by the tiber_runtime->timer_lock
 
 	// this is the internal reference count for the internal usage of the tiber functions (other than the tiber_cond, tiber_mutex and timer_queue)

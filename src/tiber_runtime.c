@@ -180,13 +180,42 @@ static uint64_t timer_job_func(void* tr_v)
 
 	while(1)
 	{
+		// tiber that needs to be woken up
+		tiber* tb = NULL;
+		struct timespec abstime_for_wakeup;
+
 		// read one from the timer_queue
+		pthread_spin_lock(&(tr->timer_lock));
+
+		tb = get_top_of_pheap(&(tr->timer_queue));
+		if(tb != NULL)
+		{
+			increment_tiber_reference_count(tb);
+			abstime_for_wakeup = tb->abstime_for_wakeup;
+		}
+
+		pthread_spin_unlock(&(tr->timer_lock));
 
 		// if tb is NULL, return BLOCKING
+		if(tb == NULL)
+			return BLOCKING;
+
+		struct timespec now_time;
+		clock_gettime(CLOCK_MONOTONIC, &now_time);
 
 		// if the time has not elapsed yet, return the number of microseconds to wake up after
+		int timer_elapsed = (timespec_compare(now_time, abstime_for_wakeup) >= 0);
+
+		if(!timer_elapsed)
+		{
+			uint64_t microseconds_to_wake_up_in = timespec_to_microseconds(timespec_sub(abstime_for_wakeup, now_time));
+			if(microseconds_to_wake_up_in > 3) // go to sleep only if it is less than 3 microseconds, else wake it up
+				return microseconds_to_wake_up_in;
+		}
 
 		// wake the tiber and continue
+		wake_up_waiting_tiber(tb);
+		decrement_tiber_reference_count(tb);
 	}
 
 	return BLOCKING;
