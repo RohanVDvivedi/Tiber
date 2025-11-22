@@ -340,6 +340,8 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 {
 	const struct timespec abstime_for_wakeup = (*abs_time);
 
+	int need_to_wake_up_timer_job = 0;
+
 	while(1)
 	{
 		pthread_spin_lock(&(curr_tiber->state_lock));
@@ -383,6 +385,7 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 			pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
 
 			push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+			need_to_wake_up_timer_job = (curr_tiber == get_top_of_pheap(&(curr_tiber->runtime->timer_queue)));
 
 			pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
 		}
@@ -390,6 +393,10 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 		curr_tiber->state = TIBER_WAITING;
 
 		pthread_spin_unlock(&(curr_tiber->state_lock));
+
+		// we inserted ourselves to timer_queue, so wake up the timer_job
+		if(need_to_wake_up_timer_job)
+			wake_up_alarm_job(&(curr_tiber->runtime->timer_job));
 
 		// switch back to the caller, and do not queue, we are waiting
 		switch_from_this_tiber_to_caller_thread();
@@ -471,6 +478,8 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 {
 	const struct timespec abstime_for_wakeup = (*abs_time);
 
+	int need_to_wake_up_timer_job = 0;
+
 	pthread_spin_lock(&(curr_tiber->state_lock));
 
 	{
@@ -490,6 +499,7 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 		pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
 
 		push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+		need_to_wake_up_timer_job = (curr_tiber == get_top_of_pheap(&(curr_tiber->runtime->timer_queue)));
 
 		pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
 	}
@@ -500,6 +510,10 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 
 	// unlock the mutex after putting the self in waiting
 	tiber_mutex_unlock(tm);
+
+	// we inserted ourselves to timer_queue, so wake up the timer_job
+	if(need_to_wake_up_timer_job)
+		wake_up_alarm_job(&(curr_tiber->runtime->timer_job));
 
 	// switch back to the caller, and do not queue, we are waiting
 	switch_from_this_tiber_to_caller_thread();
@@ -650,6 +664,8 @@ void tiber_abs_sleep(const struct timespec *abs_time)
 {
 	const struct timespec abstime_for_wakeup = (*abs_time);
 
+	int need_to_wake_up_timer_job = 0;
+
 	pthread_spin_lock(&(curr_tiber->state_lock));
 
 	{
@@ -659,6 +675,7 @@ void tiber_abs_sleep(const struct timespec *abs_time)
 		pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
 
 		push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+		need_to_wake_up_timer_job = (curr_tiber == get_top_of_pheap(&(curr_tiber->runtime->timer_queue)));
 
 		pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
 	}
@@ -666,6 +683,10 @@ void tiber_abs_sleep(const struct timespec *abs_time)
 	curr_tiber->state = TIBER_WAITING;
 
 	pthread_spin_unlock(&(curr_tiber->state_lock));
+
+	// we inserted ourselves to timer_queue, so wake up the timer_job
+	if(need_to_wake_up_timer_job)
+		wake_up_alarm_job(&(curr_tiber->runtime->timer_job));
 
 	// switch back to the caller, and do not queue, we are waiting
 	switch_from_this_tiber_to_caller_thread();
