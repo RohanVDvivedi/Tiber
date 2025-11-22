@@ -246,8 +246,26 @@ int tiber_mutex_destroy(tiber_mutex* tm)
 	return 0;
 }
 
+int tiber_mutex_trylock(tiber_mutex* tm)
+{
+	int result;
+
+	pthread_spin_lock(&(tm->lock));
+
+	if(tm->is_locked)
+		result = EBUSY;
+	else
+	{
+		result = 0;
+		tm->is_locked = 1;
+	}
+
+	pthread_spin_unlock(&(tm->lock));
+
+	return result;
+}
+
 int tiber_mutex_lock(tiber_mutex* tm);
-int tiber_mutex_trylock(tiber_mutex* tm);
 int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time);
 int tiber_mutex_unlock(tiber_mutex* tm);
 
