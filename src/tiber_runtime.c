@@ -19,7 +19,7 @@ __thread ucontext_t thread_context;
 
 	** only this function takes the context_lock of the tiber
 */
-static void* tiber_execute_wrapper(void* tb_v)
+static void* tiber_job_func(void* tb_v)
 {
 	// set the thread local
 	curr_tiber = (tiber*)tb_v;
