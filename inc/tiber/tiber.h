@@ -28,7 +28,7 @@ struct tiber_runtime
 
 tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size);
 
-void delete_tiber_runtime(tiber_runtime* tr_p);
+void delete_tiber_runtime(tiber_runtime* tr);
 
 // tiber mutex
 
