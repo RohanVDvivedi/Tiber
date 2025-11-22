@@ -62,3 +62,13 @@ static void* tiber_job_func(void* tb_v)
 
 	return NULL;
 }
+
+static void switch_from_this_tiber_to_caller_thread()
+{
+	// swap the context out
+	if(-1 == swapcontext(&(curr_tiber->context), &thread_context))
+	{
+		printf("TIBER BUG: tiber could not context switch into it's caller thread\n");
+		exit(-1);
+	}
+}
