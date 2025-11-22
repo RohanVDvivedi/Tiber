@@ -224,8 +224,21 @@ void delete_tiber_runtime(tiber_runtime* tr_p)
 
 // tiber mutex functions
 
-int tiber_mutex_init(tiber_mutex* tm);
-int tiber_mutex_destroy(tiber_mutex* tm);
+int tiber_mutex_init(tiber_mutex* tm)
+{
+	tm->is_locked = 0;
+	pthread_spin_init(&(tm->lock), PTHREAD_PROCESS_PRIVATE);
+	initialize_linkedlist(&(tm->waiting_tibers), offsetof(tiber, embed_node_for_tiber_mutex_waiters));
+	return 0;
+}
+
+int tiber_mutex_destroy(tiber_mutex* tm)
+{
+	tm->is_locked = 0;
+	pthread_spin_destroy(&(tm->lock));
+	return 0;
+}
+
 int tiber_mutex_lock(tiber_mutex* tm);
 int tiber_mutex_trylock(tiber_mutex* tm);
 int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time);
@@ -233,8 +246,19 @@ int tiber_mutex_unlock(tiber_mutex* tm);
 
 // tiber condtion variable functions
 
-int tiber_cond_init(tiber_cond* tc);
-int tiber_cond_destroy(tiber_cond* tc);
+int tiber_cond_init(tiber_cond* tc)
+{
+	pthread_spin_init(&(tc->lock), PTHREAD_PROCESS_PRIVATE);
+	initialize_linkedlist(&(tc->waiting_tibers), offsetof(tiber, embed_node_for_tiber_cond_waiters));
+	return 0;
+}
+
+int tiber_cond_destroy(tiber_cond* tc)
+{
+	pthread_spin_destroy(&(tc->lock));
+	return 0;
+}
+
 int tiber_cond_wait(tiber_cond* tc, tiber_mutex* tm);
 int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec *abs_time);
 int tiber_cond_signal(tiber_cond* tc);
