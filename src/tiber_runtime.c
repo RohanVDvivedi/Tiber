@@ -187,7 +187,7 @@ static uint64_t timer_job_func(void* tr_v)
 		// read one from the timer_queue
 		pthread_spin_lock(&(tr->timer_lock));
 
-		tb = get_top_of_pheap(&(tr->timer_queue));
+		tb = (tiber*) get_top_of_pheap(&(tr->timer_queue));
 		if(tb != NULL)
 		{
 			increment_tiber_reference_count(tb);
@@ -198,7 +198,10 @@ static uint64_t timer_job_func(void* tr_v)
 
 		// if tb is NULL, return BLOCKING
 		if(tb == NULL)
+		{
+			decrement_tiber_reference_count(tb);
 			return BLOCKING;
+		}
 
 		struct timespec now_time;
 		clock_gettime(CLOCK_MONOTONIC, &now_time);
@@ -210,7 +213,10 @@ static uint64_t timer_job_func(void* tr_v)
 		{
 			uint64_t microseconds_to_wake_up_in = timespec_to_microseconds(timespec_sub(abstime_for_wakeup, now_time));
 			if(microseconds_to_wake_up_in > 3) // go to sleep only if it is less than 3 microseconds, else wake it up
+			{
+				decrement_tiber_reference_count(tb);
 				return microseconds_to_wake_up_in;
+			}
 		}
 
 		// wake the tiber and continue
@@ -294,8 +300,102 @@ int tiber_mutex_trylock(tiber_mutex* tm)
 	return result;
 }
 
-int tiber_mutex_lock(tiber_mutex* tm);
-int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time);
+int tiber_mutex_lock(tiber_mutex* tm)
+{
+	while(1)
+	{
+		pthread_spin_lock(&(curr_tiber->state_lock));
+
+		{
+			curr_tiber->waiting_on_tiber_mutex = tm;
+
+			pthread_spin_lock(&(tm->lock));
+
+			if(!(tm->is_locked))
+			{
+				// quickly grab the lock and exit
+				tm->is_locked = 1;
+				curr_tiber->waiting_on_tiber_mutex = NULL;
+				pthread_spin_unlock(&(tm->lock));
+				pthread_spin_unlock(&(curr_tiber->state_lock));
+				break;
+			}
+
+			insert_tail_in_linkedlist(&(tm->waiting_tibers), curr_tiber);
+
+			pthread_spin_unlock(&(tm->lock));
+		}
+
+		curr_tiber->state = TIBER_WAITING;
+
+		pthread_spin_unlock(&(curr_tiber->state_lock));
+
+		// switch back to the caller, and do not queue, we are waiting
+		switch_from_this_tiber_to_caller_thread();
+	}
+
+	return 0;
+}
+
+int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
+{
+	const struct timespec abstime_for_wakeup = (*abs_time);
+
+	while(1)
+	{
+		pthread_spin_lock(&(curr_tiber->state_lock));
+
+		{
+			curr_tiber->waiting_on_tiber_mutex = tm;
+
+			pthread_spin_lock(&(tm->lock));
+
+			if(!(tm->is_locked))
+			{
+				tm->is_locked = 1;
+				curr_tiber->waiting_on_tiber_mutex = NULL;
+				pthread_spin_unlock(&(tm->lock));
+				pthread_spin_unlock(&(curr_tiber->state_lock));
+				break;
+			}
+
+			insert_tail_in_linkedlist(&(tm->waiting_tibers), curr_tiber);
+
+			pthread_spin_unlock(&(tm->lock));
+		}
+
+		// mak sure that the timeout has not expired
+		{
+			struct timespec now_time;
+			clock_gettime(CLOCK_MONOTONIC, &now_time);
+			if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
+			{
+				pthread_spin_unlock(&(curr_tiber->state_lock));
+				return ETIMEDOUT;
+			}
+		}
+
+		{
+			curr_tiber->is_timer_set = 1;
+			curr_tiber->abstime_for_wakeup = abstime_for_wakeup;
+
+			pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
+
+			push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+
+			pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
+		}
+
+		curr_tiber->state = TIBER_WAITING;
+
+		pthread_spin_unlock(&(curr_tiber->state_lock));
+
+		// switch back to the caller, and do not queue, we are waiting
+		switch_from_this_tiber_to_caller_thread();
+	}
+
+	return 0;
+}
 
 int tiber_mutex_unlock(tiber_mutex* tm)
 {
