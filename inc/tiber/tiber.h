@@ -87,6 +87,11 @@ struct tiber
 	// free this stack memory on TIBER_KILLED state
 	void* stack;
 
+	// the input function of the tiber that actuall returns the value
+	void* input_p;
+	void* (*entry_func)(void* input_p);
+	void* return_value;
+
 	// tiber contexts, while the thread's context it works with is in its thread local (check the source tiber_runtime.c)
 	pthread_spinlock_t context_lock;
 	ucontext_t context;
@@ -94,7 +99,6 @@ struct tiber
 	// tiber's state
 	pthread_spinlock_t state_lock;
 	tiber_state state;
-	void* return_value;
 
 	// for tiber_cond
 	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock
@@ -127,7 +131,7 @@ struct tiber
 };
 
 // if tr_p is NULL, the tiber is created for the current runtime
-tiber* new_tiber(tiber_runtime* tr_p, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
 
 // only the below 2 functions actually delete the tiber object
 int tiber_join(tiber* tb, void** return_value);

@@ -63,6 +63,13 @@ static void* tiber_job_func(void* tb_v)
 	return NULL;
 }
 
+// this function helps tiber actually have a return value, helpful when joining with the tiber
+static void tiber_exec_returner(void* tb_v)
+{
+	tiber* tb = tb_v;
+	tb->return_value = tb->entry_func(tb->input_p);
+}
+
 static inline void switch_from_this_tiber_to_caller_thread()
 {
 	// swap the context out
@@ -266,7 +273,53 @@ int tiber_cond_broadcast(tiber_cond* tc);
 
 // tiber functions
 
-tiber* new_tiber(tiber_runtime* tr_p, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
+{
+	tiber* tb = malloc(sizeof(tiber));
+	if(tb == NULL)
+		return NULL;
+
+	tb->stack = malloc(stack_size);
+	if(tb->stack == NULL)
+	{
+		free(tb);
+		return NULL;
+	}
+
+	tb->runtime = tr;
+
+	tb->input_p = input_p;
+	tb->entry_func = entry_func;
+	tb->return_value = NULL;
+
+	pthread_spin_init(&(tb->context_lock), PTHREAD_PROCESS_PRIVATE);
+
+	getcontext(&(tb->context));
+	tb->context.uc_stack.ss_sp = tb->stack;
+	tb->context.uc_stack.ss_size = stack_size;
+	tb->context.uc_stack.ss_flags = 0;
+	makecontext(&(tb->context), (void(*)())tiber_exec_returner, 1, tb);
+
+	pthread_spin_init(&(tb->state_lock), PTHREAD_PROCESS_PRIVATE);
+	tb->state = TIBER_QUEUED;
+
+	tb->waiting_on_tiber_cond = NULL;
+	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));
+
+	tb->waiting_on_tiber_mutex = NULL;
+	initialize_llnode(&(tb->embed_node_for_tiber_mutex_waiters));
+
+	tb->is_timer_set = 0;
+	tb->abstime_for_wakeup = (struct timespec){};
+	initialize_phpnode(&(tb->embed_node_for_tiber_timer_queue));
+
+	pthread_spin_init(&(tb->reference_count_lock), PTHREAD_PROCESS_PRIVATE);
+	tb->reference_count = 0;
+
+	queue_tiber_to_runime(tb);
+
+	return tb;
+}
 
 int tiber_join(tiber* tb, void** return_value);
 int tiber_detach(tiber* tb);
