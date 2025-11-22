@@ -1,2 +1,1 @@
-gcc ./test.c -o test.out -ltiber -lconnman -lboompar -lcutlery
-./test.out
+gcc -D_GNU_SOURCE ./test.c -o test.out -ltiber -lconnman -lboompar -lcutlery
