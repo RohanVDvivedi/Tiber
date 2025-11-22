@@ -7,46 +7,38 @@
 #define RUNTIME_THREADS_COUNT 	2
 #define STACK_SIZE              24*1024
 
-tiber tb1;
-tiber tb2;
-
 void* tb1_func(void* p)
 {
-	printf("Hello 1\n");
+	printf("Hello 1 from %p\n", tiber_self());
 
 	tiber_yield();
 
-	printf("Rohan 1\n");
+	printf("Rohan 1 from %p\n", tiber_self());
 
 	tiber_yield();
 
-	printf("Dvivedi 1\n");
-
-	tiber_yield();
+	printf("Dvivedi 1 from %p\n", tiber_self());
 
 	return NULL;
 }
 
 void* tb2_func(void* p)
 {
-	printf("Hello 2\n");
+	printf("Hello 2 from %p\n", tiber_self());
 
 	tiber_yield();
 
-	printf("Rohan 2\n");
+	printf("Rohan 2 from %p\n", tiber_self());
 
 	tiber_yield();
 
-	printf("Dvivedi 2\n");
+	printf("Dvivedi 2 from %p\n", tiber_self());
 
 	return NULL;
 }
 
 int MAX_COUNT = 10;
 int curr = 0;
-
-tiber tb3;
-tiber tb4;
 
 tiber_mutex lock;
 tiber_cond wait;
@@ -73,7 +65,7 @@ void* tb3_func(void* p)
 			break;
 		}
 
-		printf("Printing %d from %p\n", curr, tb3_func);
+		printf("Printing %d from %p\n", curr, tiber_self());
 		curr++;
 
 		WAKEUP(&wait);
@@ -100,7 +92,7 @@ void* tb4_func(void* p)
 			break;
 		}
 
-		printf("Printing %d from %p\n", curr, tb4_func);
+		printf("Printing %d from %p\n", curr, tiber_self());
 		curr++;
 
 		WAKEUP(&wait);
