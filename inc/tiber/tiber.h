@@ -130,7 +130,6 @@ struct tiber
 	*/
 };
 
-// if tr_p is NULL, the tiber is created for the current runtime
 tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
 
 // only the below 2 functions actually delete the tiber object
