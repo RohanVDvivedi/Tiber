@@ -1,20 +1,8 @@
 * TIBER
-  * add scheduler global spinlock
-  * add tiber_timer
-    * a global pheap of waiters
-  * make tiber_mutex (with all pthread_mutex like functions)
-    * with attributes waiters_list and is_locked
-  * make tiber_cond (with all of pthread_cond like functions)
-    * with attributes
-  * make tiber_runtime
-    * an executor with a fixed number of threads + 1 for IO (IO will be integrated later)
-    * a per executor alarm job that wakes up timed waiters
-  * make tiber
-    * ucontext for both the tiber and the pthread that calls it
-    * spinlock to protect the context switch in the thread function
-    * llnode to place it in queue for tiber_cond and another one llnode for the tiber_mutex
-    * similarly a phpnode and an abs_wake_up_time to put it in the global tiber_timer
-    * it must also have reference to the tiber_cond and tiber_mutex it is waiting on
-  * find out ways to not use the global tiber_timer and the global spinlock
+  * make current simple test case to work
+  * wakeup for the alarm job on insertions to timer_queue is not implemented do that
+  * test with sleep and timeout based tests
+
+  * find a way to safely replace all the pthread downstreams with this
 
   * implement epoll loop in ConnMan and come back for implementing IO functions here
