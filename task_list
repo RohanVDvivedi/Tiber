@@ -1,6 +1,4 @@
 * TIBER
-  * make current simple test case to work
-  * wakeup for the alarm job on insertions to timer_queue is not implemented do that
   * test with sleep and timeout based tests
 
   * find a way to safely replace all the pthread downstreams with this
