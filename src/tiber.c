@@ -1,4 +1,4 @@
-#include<boompar/tiber.h>
+#include<tiber/tiber.h>
 
 #include<stdio.h>
 #include<stdlib.h>
