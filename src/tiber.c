@@ -93,7 +93,7 @@ static inline int wake_up_waiting_tiber(tiber* tb)
 {
 	int result = 0;
 
-	pthread_spin_lock(&(curr_tiber->state_lock));
+	pthread_spin_lock(&(tb->state_lock));
 
 	if(tb->state == TIBER_WAITING)
 	{
@@ -138,7 +138,7 @@ static inline int wake_up_waiting_tiber(tiber* tb)
 		}
 	}
 
-	pthread_spin_unlock(&(curr_tiber->state_lock));
+	pthread_spin_unlock(&(tb->state_lock));
 
 	if(result)
 		queue_tiber_to_runime(tb);
