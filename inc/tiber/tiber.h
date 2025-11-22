@@ -87,7 +87,7 @@ struct tiber
 	// free this stack memory on TIBER_KILLED state
 	void* stack;
 
-	// the input function of the tiber that actuall returns the value
+	// the input function of the tiber that actually returns the value
 	void* input_p;
 	void* (*entry_func)(void* input_p);
 	void* return_value;
