@@ -63,7 +63,7 @@ static void* tiber_job_func(void* tb_v)
 	return NULL;
 }
 
-static void switch_from_this_tiber_to_caller_thread()
+static inline void switch_from_this_tiber_to_caller_thread()
 {
 	// swap the context out
 	if(-1 == swapcontext(&(curr_tiber->context), &thread_context))
@@ -71,4 +71,28 @@ static void switch_from_this_tiber_to_caller_thread()
 		printf("TIBER BUG: tiber could not context switch into it's caller thread\n");
 		exit(-1);
 	}
+}
+
+static inline uint64_t increment_tiber_reference_count(tiber* tb)
+{
+	pthread_spin_lock(&(tb->reference_count_lock));
+	uint64_t reference_count = (++tb->reference_count);
+	pthread_spin_unlock(&(tb->reference_count_lock));
+	return reference_count;
+}
+
+static inline uint64_t decrement_tiber_reference_count(tiber* tb)
+{
+	pthread_spin_lock(&(tb->reference_count_lock));
+	uint64_t reference_count = (--tb->reference_count);
+	pthread_spin_unlock(&(tb->reference_count_lock));
+	return reference_count;
+}
+
+static inline uint64_t fetch_tiber_reference_count(tiber* tb)
+{
+	pthread_spin_lock(&(tb->reference_count_lock));
+	uint64_t reference_count = tb->reference_count;
+	pthread_spin_unlock(&(tb->reference_count_lock));
+	return reference_count;
 }
