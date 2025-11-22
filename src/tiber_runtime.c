@@ -3,9 +3,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-// runtime for this thread is stored here
-__thread tiber_runtime* thread_runtime = NULL;
-
 // the current tiber that this thread is executing get's stored here
 __thread tiber* curr_tiber = NULL;
 
