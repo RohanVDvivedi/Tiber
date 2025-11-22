@@ -42,7 +42,6 @@ static void* tiber_job_func(void* tb_v)
 		printf("TIBER BUG: thread_context could not be populated\n");
 		exit(-1);
 	}
-	curr_tiber->context.uc_link = &thread_context;
 	if(-1 == swapcontext(&thread_context, &(curr_tiber->context)))
 	{
 		printf("TIBER BUG: tiber could not context switch into itself\n");
@@ -63,16 +62,6 @@ static void* tiber_job_func(void* tb_v)
 	return NULL;
 }
 
-// this function helps tiber actually have a return value, helpful when joining with the tiber
-static void tiber_exec_returner(void* tb_v)
-{
-	tiber* tb = tb_v;
-	tb->return_value = tb->entry_func(tb->input_p);
-
-	// TODO: except below line we should rely on the return from the function and uc_link of ucontext
-	tiber_exit();
-}
-
 static inline void switch_from_this_tiber_to_caller_thread()
 {
 	// swap the context out
@@ -81,6 +70,15 @@ static inline void switch_from_this_tiber_to_caller_thread()
 		printf("TIBER BUG: tiber could not context switch into it's caller thread\n");
 		exit(-1);
 	}
+}
+
+// this function helps tiber actually have a return value, helpful when joining with the tiber
+static void tiber_exec_returner(void* tb_v)
+{
+	tiber* tb = tb_v;
+	tb->return_value = tb->entry_func(tb->input_p);
+
+	switch_from_this_tiber_to_caller_thread();
 }
 
 static inline void queue_tiber_to_runime(tiber* tb)
@@ -596,6 +594,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	tb->context.uc_stack.ss_sp = tb->stack;
 	tb->context.uc_stack.ss_size = stack_size;
 	tb->context.uc_stack.ss_flags = 0;
+	tb->context.uc_link = NULL; // we ill be migrating stacks to run this tiber so do not use uc_link
 	makecontext(&(tb->context), (void(*)())tiber_exec_returner, 1, tb);
 
 	pthread_spin_init(&(tb->state_lock), PTHREAD_PROCESS_PRIVATE);
