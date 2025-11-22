@@ -646,4 +646,27 @@ void tiber_yield(void)
 	switch_from_this_tiber_to_caller_thread();
 }
 
-void tiber_sleep(const struct timespec *abs_time);
+void tiber_sleep(const struct timespec *abs_time)
+{
+	const struct timespec abstime_for_wakeup = (*abs_time);
+
+	pthread_spin_lock(&(curr_tiber->state_lock));
+
+	{
+		curr_tiber->is_timer_set = 1;
+		curr_tiber->abstime_for_wakeup = abstime_for_wakeup;
+
+		pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
+
+		push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+
+		pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
+	}
+
+	curr_tiber->state = TIBER_WAITING;
+
+	pthread_spin_unlock(&(curr_tiber->state_lock));
+
+	// switch back to the caller, and do not queue, we are waiting
+	switch_from_this_tiber_to_caller_thread();
+}
