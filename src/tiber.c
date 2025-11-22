@@ -68,6 +68,9 @@ static void tiber_exec_returner(void* tb_v)
 {
 	tiber* tb = tb_v;
 	tb->return_value = tb->entry_func(tb->input_p);
+
+	// TODO: except below line we should rely on the return from the function and uc_link of ucontext
+	tiber_exit();
 }
 
 static inline void switch_from_this_tiber_to_caller_thread()
@@ -259,7 +262,7 @@ tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size)
 
 void delete_tiber_runtime(tiber_runtime* tr_p)
 {
-
+	// TODO: how to safely destroy tiber runtime, we also need to pass a way to release all memory from queued tibers
 }
 
 // tiber mutex functions
@@ -616,8 +619,8 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	return tb;
 }
 
-int tiber_join(tiber* tb, void** return_value);
-int tiber_detach(tiber* tb);
+int tiber_join(tiber* tb, void** return_value); // TODO: only they can release tiber memory
+int tiber_detach(tiber* tb); // TODO: only they can release tiber memory
 
 tiber* tiber_self(void)
 {
