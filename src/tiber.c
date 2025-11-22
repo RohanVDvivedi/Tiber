@@ -472,56 +472,48 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 {
 	const struct timespec abstime_for_wakeup = (*abs_time);
 
-	while(1)
+	pthread_spin_lock(&(curr_tiber->state_lock));
+
 	{
-		pthread_spin_lock(&(curr_tiber->state_lock));
+		curr_tiber->waiting_on_tiber_cond = tc;
 
-		{
-			curr_tiber->waiting_on_tiber_cond = tc;
+		pthread_spin_lock(&(tc->lock));
 
-			pthread_spin_lock(&(tc->lock));
+		insert_tail_in_linkedlist(&(tc->waiting_tibers), curr_tiber);
 
-			// make sure that the timeout has not expired
-			{
-				struct timespec now_time;
-				clock_gettime(CLOCK_MONOTONIC, &now_time);
-				if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
-				{
-					pthread_spin_unlock(&(tc->lock));
-					curr_tiber->waiting_on_tiber_cond = NULL;
-					pthread_spin_unlock(&(curr_tiber->state_lock));
-					return ETIMEDOUT;
-				}
-			}
+		pthread_spin_unlock(&(tc->lock));
+	}
 
-			insert_tail_in_linkedlist(&(tc->waiting_tibers), curr_tiber);
+	{
+		curr_tiber->is_timer_set = 1;
+		curr_tiber->abstime_for_wakeup = abstime_for_wakeup;
 
-			pthread_spin_unlock(&(tc->lock));
-		}
+		pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
 
-		{
-			curr_tiber->is_timer_set = 1;
-			curr_tiber->abstime_for_wakeup = abstime_for_wakeup;
+		push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
 
-			pthread_spin_lock(&(curr_tiber->runtime->timer_lock));
+		pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
+	}
 
-			push_to_pheap(&(curr_tiber->runtime->timer_queue), curr_tiber);
+	curr_tiber->state = TIBER_WAITING;
 
-			pthread_spin_unlock(&(curr_tiber->runtime->timer_lock));
-		}
+	pthread_spin_unlock(&(curr_tiber->state_lock));
 
-		curr_tiber->state = TIBER_WAITING;
+	// unlock the mutex after putting the self in waiting
+	tiber_mutex_unlock(tm);
 
-		pthread_spin_unlock(&(curr_tiber->state_lock));
+	// switch back to the caller, and do not queue, we are waiting
+	switch_from_this_tiber_to_caller_thread();
 
-		// unlock the mutex after putting the self in waiting
-		tiber_mutex_unlock(tm);
+	// recapture mutex after comming back from waiting
+	tiber_mutex_lock(tm);
 
-		// switch back to the caller, and do not queue, we are waiting
-		switch_from_this_tiber_to_caller_thread();
-
-		// recapture mutex after comming back from waiting
-		tiber_mutex_lock(tm);
+	// make sure that the timeout has not expired, if so return ETIMEDOUT
+	{
+		struct timespec now_time;
+		clock_gettime(CLOCK_MONOTONIC, &now_time);
+		if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
+			return ETIMEDOUT;
 	}
 
 	return 0;
