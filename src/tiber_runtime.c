@@ -221,3 +221,38 @@ void delete_tiber_runtime(tiber_runtime* tr_p)
 {
 
 }
+
+// tiber mutex functions
+
+int tiber_mutex_init(tiber_mutex* tm);
+int tiber_mutex_destroy(tiber_mutex* tm);
+int tiber_mutex_lock(tiber_mutex* tm);
+int tiber_mutex_trylock(tiber_mutex* tm);
+int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time);
+int tiber_mutex_unlock(tiber_mutex* tm);
+
+// tiber condtion variable functions
+
+int tiber_cond_init(tiber_cond* tc);
+int tiber_cond_destroy(tiber_cond* tc);
+int tiber_cond_wait(tiber_cond* tc, tiber_mutex* tm);
+int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec *abs_time);
+int tiber_cond_signal(tiber_cond* tc);
+int tiber_cond_broadcast(tiber_cond* tc);
+
+// tiber functions
+
+tiber* new_tiber(tiber_runtime* tr_p, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
+
+int tiber_join(tiber* tb, void** return_value);
+int tiber_detach(tiber* tb);
+
+tiber* tiber_self(void)
+{
+	return curr_tiber;
+}
+
+void tiber_exit(void);
+void tiber_yield(void);
+
+void tiber_sleep(const struct timespec *abs_time);
