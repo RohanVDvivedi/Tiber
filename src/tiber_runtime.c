@@ -309,8 +309,55 @@ int tiber_cond_destroy(tiber_cond* tc)
 
 int tiber_cond_wait(tiber_cond* tc, tiber_mutex* tm);
 int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec *abs_time);
-int tiber_cond_signal(tiber_cond* tc);
-int tiber_cond_broadcast(tiber_cond* tc);
+
+int tiber_cond_signal(tiber_cond* tc)
+{
+	// tiber to be woken up
+	tiber* tb = NULL;
+
+	pthread_spin_lock(&(tc->lock));
+
+	tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
+	if(tb != NULL)
+		increment_tiber_reference_count(tb);
+
+	pthread_spin_unlock(&(tc->lock));
+
+	if(tb != NULL)
+	{
+		wake_up_waiting_tiber(tb);
+		decrement_tiber_reference_count(tb);
+	}
+
+	return 0;
+}
+
+int tiber_cond_broadcast(tiber_cond* tc)
+{
+	while(1)
+	{
+		// tiber to be woken up
+		tiber* tb = NULL;
+
+		pthread_spin_lock(&(tc->lock));
+
+		tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
+		if(tb != NULL)
+			increment_tiber_reference_count(tb);
+
+		pthread_spin_unlock(&(tc->lock));
+
+		if(tb != NULL)
+		{
+			wake_up_waiting_tiber(tb);
+			decrement_tiber_reference_count(tb);
+		}
+		else
+			break;
+	}
+
+	return 0;
+}
 
 // tiber functions
 
