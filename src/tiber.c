@@ -316,8 +316,8 @@ int tiber_mutex_lock(tiber_mutex* tm)
 			{
 				// quickly grab the lock and exit
 				tm->is_locked = 1;
-				curr_tiber->waiting_on_tiber_mutex = NULL;
 				pthread_spin_unlock(&(tm->lock));
+				curr_tiber->waiting_on_tiber_mutex = NULL;
 				pthread_spin_unlock(&(curr_tiber->state_lock));
 				break;
 			}
