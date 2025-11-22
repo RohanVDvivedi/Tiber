@@ -141,7 +141,11 @@ tiber* tiber_self(void);
 void tiber_exit(void);
 void tiber_yield(void);
 
-void tiber_sleep(const struct timespec *abs_time);
+void tiber_abs_sleep(const struct timespec *abs_time);
 
+// versions of the functions above
+void tiber_sleep(uint64_t seconds);
+void tiber_msleep(uint64_t seconds);
+void tiber_usleep(uint64_t seconds);
 
 #endif

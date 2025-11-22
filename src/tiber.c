@@ -646,7 +646,7 @@ void tiber_yield(void)
 	switch_from_this_tiber_to_caller_thread();
 }
 
-void tiber_sleep(const struct timespec *abs_time)
+void tiber_abs_sleep(const struct timespec *abs_time)
 {
 	const struct timespec abstime_for_wakeup = (*abs_time);
 
@@ -669,4 +669,34 @@ void tiber_sleep(const struct timespec *abs_time)
 
 	// switch back to the caller, and do not queue, we are waiting
 	switch_from_this_tiber_to_caller_thread();
+}
+
+void tiber_sleep(uint64_t seconds)
+{
+	struct timespec now_time;
+	clock_gettime(CLOCK_MONOTONIC, &now_time);
+
+	struct timespec abs_time = timespec_add(now_time, timespec_from_seconds(seconds));
+
+	tiber_abs_sleep(&abs_time);
+}
+
+void tiber_msleep(uint64_t milliseconds)
+{
+	struct timespec now_time;
+	clock_gettime(CLOCK_MONOTONIC, &now_time);
+
+	struct timespec abs_time = timespec_add(now_time, timespec_from_milliseconds(milliseconds));
+
+	tiber_abs_sleep(&abs_time);
+}
+
+void tiber_usleep(uint64_t microseconds)
+{
+	struct timespec now_time;
+	clock_gettime(CLOCK_MONOTONIC, &now_time);
+
+	struct timespec abs_time = timespec_add(now_time, timespec_from_microseconds(microseconds));
+
+	tiber_abs_sleep(&abs_time);
 }
