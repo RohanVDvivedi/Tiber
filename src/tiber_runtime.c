@@ -353,26 +353,28 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 			if(!(tm->is_locked))
 			{
 				tm->is_locked = 1;
-				curr_tiber->waiting_on_tiber_mutex = NULL;
 				pthread_spin_unlock(&(tm->lock));
+				curr_tiber->waiting_on_tiber_mutex = NULL;
 				pthread_spin_unlock(&(curr_tiber->state_lock));
 				break;
+			}
+
+			// make sure that the timeout has not expired
+			{
+				struct timespec now_time;
+				clock_gettime(CLOCK_MONOTONIC, &now_time);
+				if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
+				{
+					pthread_spin_unlock(&(tm->lock));
+					curr_tiber->waiting_on_tiber_mutex = NULL;
+					pthread_spin_unlock(&(curr_tiber->state_lock));
+					return ETIMEDOUT;
+				}
 			}
 
 			insert_tail_in_linkedlist(&(tm->waiting_tibers), curr_tiber);
 
 			pthread_spin_unlock(&(tm->lock));
-		}
-
-		// mak sure that the timeout has not expired
-		{
-			struct timespec now_time;
-			clock_gettime(CLOCK_MONOTONIC, &now_time);
-			if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
-			{
-				pthread_spin_unlock(&(curr_tiber->state_lock));
-				return ETIMEDOUT;
-			}
 		}
 
 		{
