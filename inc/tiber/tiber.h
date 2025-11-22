@@ -97,17 +97,22 @@ struct tiber
 	void* return_value;
 
 	// for tiber_cond
-	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock
+	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock and tiber_cond->lock
 	llnode embed_node_for_tiber_cond_waiters;	// protected by the tiber_cond->lock
 
 	// for tiber_mutex
-	tiber_mutex* waiting_on_tiber_mutex;		// protected by the tiber_state_lock
+	tiber_mutex* waiting_on_tiber_mutex;		// protected by the tiber_state_lock and tiber_mutex->lock
 	llnode embed_node_for_tiber_mutex_waiters;	// protected by the tiber_mutex->lock
 
 	// this will be set for a timer based waiting tiber
-	int is_timer_set;							// protected by the tiber_state_lock
-	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock
+	int is_timer_set;							// protected by the tiber_state_lock and tiber_runtime->timer_lock
+	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock and tiber_runtime->timer_lock
 	phpnode embed_node_for_tiber_timer_queue;	// protected by the tiber_runtime->timer_lock
+
+	// this is the internal reference count for the internal usage of the tiber functions (other than the tiber_cond, tiber_mutex and timer_queue)
+	// this allows us to not kill it before the tiber is released by all the internal functions
+	pthread_spinlock_t reference_count_lock;
+	uint64_t reference_count;					// protected by the reference_count_lock
 
 	// you may free the tiber's struct with the state_lock held only if
 	/*
@@ -115,6 +120,7 @@ struct tiber
 		&& waiting_on_tiber_cond == NULL
 		&& waiting_on_tiber_mutex == NULL
 		&& is_timer_set == 0
+		&& reference_count == 0
 
 		the attributes act as reference counting for the tiber struct
 	*/
