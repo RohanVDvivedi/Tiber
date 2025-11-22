@@ -1,6 +1,8 @@
 * TIBER
   * test with sleep and timeout based tests
 
+  * there can be missed wakeups if we insert to timer_queue while it is just about to shutdown
+
   * find a way to safely replace all the pthread downstreams with this
 
   * implement epoll loop in ConnMan and come back for implementing IO functions here
