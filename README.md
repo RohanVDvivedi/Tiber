@@ -1,13 +1,18 @@
-# c_template_application
-A template for all of my c projects.
+# Tiber
+A C runtime allowing you to run fibers/coroutines, and allowing you to co-operatively context switch between them using ucontext.
 
 ## Setup instructions
+**Install dependencies :**
+ * [Cutlery](https://github.com/RohanVDvivedi/Cutlery)
+ * [PosixUtils](https://github.com/RohanVDvivedi/PosixUtils)
+ * [BoomPar](https://github.com/RohanVDvivedi/BoomPar)
+ * [ConnMan](https://github.com/RohanVDvivedi/ConnMan)
 
 **Download source code :**
- * `git clone https://github.com/RohanVDvivedi/c_template_application.git`
+ * `git clone https://github.com/RohanVDvivedi/Tiber.git`
 
 **Build from source :**
- * `cd c_template_application`
+ * `cd Tiber`
  * `make clean all`
 
 **Install from the build :**
@@ -15,13 +20,12 @@ A template for all of my c projects.
  * ***Once you have installed from source, you may discard the build by*** `make clean`
 
 ## Using The library
- * add `-lcapp` linker flag, while compiling your application
+ * add `-ltiber -lconnman -lboompar -lcutlery` linker flag, while compiling your application
  * do not forget to include appropriate public api headers as and when needed. this includes
-   * `#include<capp/capp.h>`
-   * `#include<capp/print_temp.h>`
+   * `#include<tiber/tiber.h>`
 
 ## Instructions for uninstalling library
 
 **Uninstall :**
- * `cd c_template_application`
+ * `cd Tiber`
  * `sudo make uninstall`
