@@ -17,13 +17,13 @@
 typedef struct tiber_runtime tiber_runtime;
 struct tiber_runtime
 {
-	executor* tiber_executor;
+	executor* threadpool;
 
-	alarm_job* tiber_timer_job;
+	alarm_job* timer_job;
 
-	pthread_spinlock_t tiber_timer_lock;
+	pthread_spinlock_t timer_lock;
 
-	pheap tiber_timer_queue;
+	pheap timer_queue;
 };
 
 tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size);
@@ -80,30 +80,34 @@ enum tiber_state
 typedef struct tiber tiber;
 struct tiber
 {
+	// this is the runtime this tiber will be executed on, it is static it will no change
+	tiber_runtime* tiber_runtime;
+
+	// stack space for the tiber, it is static it will no change
 	// free this stack memory on TIBER_KILLED state
 	void* stack;
 
-	// tiber's contexts
-	pthread_spinlock_t tiber_context_lock;
-	ucontext_t tiber_context;
+	// tiber contexts, while the thread's context it works with is in its thread local (check the source tiber_runtime.c)
+	pthread_spinlock_t context_lock;
+	ucontext_t context;
 
 	// tiber's state
-	pthread_spinlock_t tiber_state_lock;
+	pthread_spinlock_t state_lock;
 	tiber_state state;
 	void* return_value;
 
 	// for tiber_cond
-	tiber_cond* waiting_on_tiber_cond;
-	llnode embed_node_for_tiber_cond_waiters;
+	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock
+	llnode embed_node_for_tiber_cond_waiters;	// protected by the tiber_cond->lock
 
 	// for tiber_mutex
-	tiber_mutex* waiting_on_tiber_mutex;
-	llnode embed_node_for_tiber_mutex_waiters;
+	tiber_mutex* waiting_on_tiber_mutex;		// protected by the tiber_state_lock
+	llnode embed_node_for_tiber_mutex_waiters;	// protected by the tiber_mutex->lock
 
-	// this will be set of the 
-	struct timespec abstime_for_wakeup;
-	phpnode embed_node_for_tiber_timer_queue;
-	int is_timer_set;
+	// this will be set for a timer based waiting tiber
+	int is_timer_set;							// protected by the tiber_state_lock
+	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock
+	phpnode embed_node_for_tiber_timer_queue;	// protected by the tiber_runtime->timer_lock
 };
 
 // if tr_p is NULL, the tiber is created for the current runtime
