@@ -199,10 +199,7 @@ static uint64_t timer_job_func(void* tr_v)
 
 		// if tb is NULL, return BLOCKING
 		if(tb == NULL)
-		{
-			decrement_tiber_reference_count(tb);
 			return BLOCKING;
-		}
 
 		struct timespec now_time;
 		clock_gettime(CLOCK_MONOTONIC, &now_time);
