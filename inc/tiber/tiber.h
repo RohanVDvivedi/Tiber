@@ -108,6 +108,16 @@ struct tiber
 	int is_timer_set;							// protected by the tiber_state_lock
 	struct timespec abstime_for_wakeup;			// protected by the tiber_state_lock
 	phpnode embed_node_for_tiber_timer_queue;	// protected by the tiber_runtime->timer_lock
+
+	// you may free the tiber's struct with the state_lock held only if
+	/*
+		state == possibly KILLED
+		&& waiting_on_tiber_cond == NULL
+		&& waiting_on_tiber_mutex == NULL
+		&& is_timer_set == 0
+
+		the attributes act as reference counting for the tiber struct
+	*/
 };
 
 // if tr_p is NULL, the tiber is created for the current runtime
