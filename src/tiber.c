@@ -254,6 +254,7 @@ tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size)
 		printf("TIBER BUG: tiber runtime, timer_job creation failed\n");
 		exit(-1);
 	}
+	wake_up_alarm_job(tr->timer_job);
 
 	return tr;
 }
