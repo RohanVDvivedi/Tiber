@@ -568,7 +568,7 @@ int tiber_cond_broadcast(tiber_cond* tc)
 
 // tiber functions
 
-tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached)
 {
 	tiber* tb = malloc(sizeof(tiber));
 	if(tb == NULL)
@@ -586,6 +586,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	tb->input_p = input_p;
 	tb->entry_func = entry_func;
 	tb->return_value = NULL;
+	initialize_tiber_result(&(tb->result));
 
 	pthread_spin_init(&(tb->context_lock), PTHREAD_PROCESS_PRIVATE);
 
@@ -598,6 +599,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 
 	pthread_spin_init(&(tb->state_lock), PTHREAD_PROCESS_PRIVATE);
 	tb->state = TIBER_QUEUED;
+	tb->is_detached = is_detached;
 
 	tb->waiting_on_tiber_cond = NULL;
 	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));

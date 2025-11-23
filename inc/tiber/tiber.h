@@ -77,6 +77,21 @@ enum tiber_state
 	TIBER_KILLED,
 };
 
+typedef struct tiber_result tiber_result;
+struct tiber_result
+{
+	int is_result_set;
+	void* result;
+
+	pthread_mutex_t lock1;
+	pthread_cond_t wait1;
+
+	tiber_mutex lock2;
+	tiber_cond wait2;
+};
+
+#include<tiber/tiber_result.h>
+
 typedef struct tiber tiber;
 struct tiber
 {
@@ -92,6 +107,9 @@ struct tiber
 	void* (*entry_func)(void* input_p);
 	void* return_value;
 
+	// the return from the entry_func gets set here after the tiber is killed
+	tiber_result result;
+
 	// tiber contexts, while the thread's context it works with is in its thread local (check the source tiber_runtime.c)
 	pthread_spinlock_t context_lock;
 	ucontext_t context;
@@ -99,6 +117,7 @@ struct tiber
 	// tiber's state
 	pthread_spinlock_t state_lock;
 	tiber_state state;
+	int is_detached;
 
 	// for tiber_cond
 	tiber_cond* waiting_on_tiber_cond;			// protected by the tiber_state_lock
@@ -130,7 +149,7 @@ struct tiber
 	*/
 };
 
-tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached);
 
 // only the below 2 functions actually delete the tiber object
 int tiber_join(tiber* tb, void** return_value);
