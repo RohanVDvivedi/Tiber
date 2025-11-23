@@ -65,13 +65,13 @@ static void* tiber_job_func(void* tb_v)
 	}
 	pthread_spin_unlock(&(curr_tiber->state_lock));
 
+	if(need_to_set_tiber_result)
+		set_tiber_result(&(((tiber*)tb_v)->result), ((tiber*)tb_v)->return_value);
+
 	// reset the thread local
 	curr_tiber = NULL;
 
 	// now we are out of tiber's execution so proceed as if we are a thread, and not a tiber
-
-	if(need_to_set_tiber_result)
-		set_tiber_result(&(((tiber*)tb_v)->result), ((tiber*)tb_v)->return_value);
 
 	if(need_to_delete_tiber)
 		delete_tiber((tiber*)tb_v);
