@@ -251,6 +251,7 @@ int main()
 
 	void* return_value;
 	tiber_join(tb[9], &return_value);
+	printf("joined %d tiber @ %lu\n", 9, millis_since_start());
 
 	tiber_mutex_destroy(&lock);
 	tiber_cond_destroy(&wait);
