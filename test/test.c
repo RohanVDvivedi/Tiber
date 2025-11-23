@@ -211,6 +211,20 @@ void* tb8_func(void* p)
 	return NULL;
 }
 
+void* tb9_func(void* p)
+{
+	tiber** tb = p;
+
+	for(int i = 1; i <= 8; i++)
+	{
+		void* return_value;
+		tiber_join(tb[i], &return_value);
+		printf("joined %d tiber @ %lu\n", i, millis_since_start());
+	}
+
+	return NULL;
+}
+
 int main()
 {
 	millis_since_start();
@@ -233,12 +247,10 @@ int main()
 	tb[6] = new_tiber(tr, tb6_func, NULL, 4096, 0);
 	tb[7] = new_tiber(tr, tb7_func, NULL, 4096, 0);
 	tb[8] = new_tiber(tr, tb8_func, NULL, 4096, 0);
+	tb[9] = new_tiber(tr, tb9_func, tb, 4096, 0);
 
-	for(int i = 1; i <= 8; i++)
-	{
-		void* return_value;
-		tiber_join(tb[i], &return_value);
-	}
+	void* return_value;
+	tiber_join(tb[9], &return_value);
 
 	tiber_mutex_destroy(&lock);
 	tiber_cond_destroy(&wait);
