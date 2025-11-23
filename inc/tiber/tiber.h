@@ -151,4 +151,7 @@ void tiber_usleep(uint64_t seconds);
 // gets the current time
 struct timespec tiber_now();
 
+// check if a tiber timeout has elapsed, microseconds_left may be NULL
+int has_tiber_timeout_elapsed(struct timespec abs_time, uint64_t* microseconds_left);
+
 #endif

@@ -713,3 +713,26 @@ struct timespec tiber_now()
 	clock_gettime(CLOCK_MONOTONIC, &now_time);
 	return now_time;
 }
+
+int has_tiber_timeout_elapsed(struct timespec abs_time, uint64_t* microseconds_left)
+{
+	uint64_t microseconds_left_TEMP = 0;
+	if(microseconds_left == NULL)
+		microseconds_left = &microseconds_left_TEMP;
+
+	(*microseconds_left) = 0;
+
+	// fetch the current time
+	struct timespec now_time = tiber_now();
+
+	// if current time >= abs_time, we say the timeout has elapsed
+	if(timespec_compare(now_time, abs_time) >= 0)
+		return 1;
+
+	// else if the microseconds left is lesser than 3, then too the timer is said to have been elapsed
+	(*microseconds_left) = timespec_to_microseconds(timespec_sub(abs_time, now_time));
+	if((*microseconds_left) < 3)
+		return 1;
+
+	return 0;
+}
