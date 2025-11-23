@@ -51,13 +51,28 @@ static void* tiber_job_func(void* tb_v)
 
 	// change curr_tiber's state if running to killed
 	// because it returned from the entry function
+	int need_to_set_tiber_result = 0;
+	int need_to_delete_tiber = 0;
 	pthread_spin_lock(&(curr_tiber->state_lock));
 	if(curr_tiber->state == TIBER_RUNNING)
+	{
+		need_to_set_tiber_result = 1; // we are killing it so we need to set its result
 		curr_tiber->state = TIBER_KILLED;
+		if(curr_tiber->is_detached)
+			need_to_delete_tiber = 1;	// if it was detached while we killed it, we need to delete it too
+	}
 	pthread_spin_unlock(&(curr_tiber->state_lock));
 
 	// reset the thread local
 	curr_tiber = NULL;
+
+	// now we are out of tiber's execution so proceed as if we are a thread, and not a tiber
+
+	if(need_to_set_tiber_result)
+		set_tiber_result(&(((tiber*)tb_v)->result), ((tiber*)tb_v)->return_value);
+
+	if(need_to_delete_tiber)
+		delete_tiber((tiber*)tb_v);
 
 	return NULL;
 }
@@ -619,8 +634,47 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	return tb;
 }
 
-int tiber_join(tiber* tb, void** return_value); // TODO: only they can release tiber memory
-int tiber_detach(tiber* tb); // TODO: only they can release tiber memory
+int tiber_join(tiber* tb, void** return_value)
+{
+	pthread_spin_lock(&(tb->state_lock));
+	int can_be_joined = !(tb->is_detached);
+	pthread_spin_unlock(&(tb->state_lock));
+
+	if(!can_be_joined)
+		return EINVAL;
+
+	// we got the return value, it must now have been killed so delete the tiber
+	(*return_value) = get_tiber_result(&(tb->result));
+
+	delete_tiber(tb);
+
+	return 0;
+}
+
+int tiber_detach(tiber* tb)
+{
+	int need_to_delete_tiber = 0;
+
+	pthread_spin_lock(&(tb->state_lock));
+
+	if(!(tb->is_detached)) // move forward only if it was joinable
+	{
+		tb->is_detached = 1;
+		if(tb->state == TIBER_KILLED)
+			need_to_delete_tiber = 1;
+	}
+
+	pthread_spin_unlock(&(tb->state_lock));
+
+	// let it set its result, then we delete it
+	if(need_to_delete_tiber)
+	{
+		get_tiber_result(&(tb->result));
+		delete_tiber(tb);
+	}
+
+	return 0;
+}
 
 tiber* tiber_self(void)
 {
