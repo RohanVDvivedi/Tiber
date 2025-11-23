@@ -223,23 +223,32 @@ int main()
 
 	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
 
-	tiber* tb1 = new_tiber(tr, tb1_func, NULL, 4096, 0);
-	tiber* tb2 = new_tiber(tr, tb2_func, NULL, 4096, 0);
-	tiber* tb3 = new_tiber(tr, tb3_func, NULL, 4096, 0);
-	tiber* tb4 = new_tiber(tr, tb4_func, NULL, 4096, 0);
-	tiber* tb5 = new_tiber(tr, tb5_func, NULL, 4096, 0);
-	tiber* tb6 = new_tiber(tr, tb6_func, NULL, 4096, 0);
-	tiber* tb7 = new_tiber(tr, tb7_func, NULL, 4096, 0);
-	tiber* tb8 = new_tiber(tr, tb8_func, NULL, 4096, 0);
+	tiber* tb[20] = {};
 
-	// wait for 5 seconds
-	sleep(10);
+	tb[1] = new_tiber(tr, tb1_func, NULL, 4096, 0);
+	tb[2] = new_tiber(tr, tb2_func, NULL, 4096, 0);
+	tb[3] = new_tiber(tr, tb3_func, NULL, 4096, 0);
+	tb[4] = new_tiber(tr, tb4_func, NULL, 4096, 0);
+	tb[5] = new_tiber(tr, tb5_func, NULL, 4096, 0);
+	tb[6] = new_tiber(tr, tb6_func, NULL, 4096, 0);
+	tb[7] = new_tiber(tr, tb7_func, NULL, 4096, 0);
+	tb[8] = new_tiber(tr, tb8_func, NULL, 4096, 0);
+
+	for(int i = 1; i <= 8; i++)
+	{
+		void* return_value;
+		tiber_join(tb[i], &return_value);
+	}
 
 	tiber_mutex_destroy(&lock);
 	tiber_cond_destroy(&wait);
 
 	tiber_mutex_destroy(&lock1);
 	tiber_cond_destroy(&wait1);
+
+	delete_tiber_runtime(tr);
+
+	printf("TEST COMPLETE\n");
 
 	return 0;
 }
