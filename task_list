@@ -2,8 +2,12 @@
 
 * TIBER
 
-  * there can be missed wakeups if we insert to timer_queue while it is just about to pause the timer job
-
-  * find a way to safely replace all the pthread downstreams with this
+  * there can be missed wakeups if we insert to timer_queue while it is just about to pause/make-wait the timer job
 
   * implement epoll loop in ConnMan and come back for implementing IO functions here
+  * make separate fixed sized thread pool running epoll loop on different clients, that wake up tibers that are waiting for io using a notify callback that triggers a tiber_cond to wake up that correct tiber
+
+  * find a way to safely replace all the pthread downstreams with this
+  * find a way to integrate it into the main thread
+    * make main thread create a global tiber_runtime with 24KB stack space on threads and thread count being the number of CPU cores
+    * use default runtime to create new tibers
