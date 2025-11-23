@@ -1,7 +1,14 @@
-* TIBER
-  * test with sleep and timeout based tests
+* PICKED TASKS
+  * implement get time_spec now
+  * and has timeout elapsed, that also returns now
+  * add it as utils code 
 
-  * there can be missed wakeups if we insert to timer_queue while it is just about to shutdown
+  * implement result getter struct that works with both pthread and tiber
+  * implement join detach and delete runtime and delete tiber functions
+
+* TIBER
+
+  * there can be missed wakeups if we insert to timer_queue while it is just about to pause the timer job
 
   * find a way to safely replace all the pthread downstreams with this
 
