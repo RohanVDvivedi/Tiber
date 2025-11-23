@@ -8,6 +8,7 @@
   * make separate fixed sized thread pool running epoll loop on different clients, that wake up tibers that are waiting for io using a notify callback that triggers a tiber_cond to wake up that correct tiber
 
   * find a way to safely replace all the pthread downstreams with this
+    * using library reordering and -include flag to #include a converted that #defines all pthread structs and functions to tiber structs and functions
   * find a way to integrate it into the main thread
     * make main thread create a global tiber_runtime with 24KB stack space on threads and thread count being the number of CPU cores
     * use default runtime to create new tibers
