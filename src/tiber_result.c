@@ -8,10 +8,10 @@ void initialize_tiber_result(tiber_result* tres)
 	tres->result = NULL;
 
 	pthread_mutex_init(&(tres->lock1), NULL);
-	pthread_cond_init_with_monotonic_clock(&(tres->cond1));
+	pthread_cond_init_with_monotonic_clock(&(tres->wait1));
 
 	tiber_mutex_init(&(tres->lock2));
-	tiber_cond_init(&(tres->cond2));
+	tiber_cond_init(&(tres->wait2));
 }
 
 void set_tiber_result(tiber_result* tres, void* result)
@@ -59,8 +59,8 @@ void deinitialize_tiber_result(tiber_result* tres)
 	tres->result = NULL;
 
 	pthread_mutex_destroy(&(tres->lock1));
-	pthread_cond_destroy(&(tres->cond1));
+	pthread_cond_destroy(&(tres->wait1));
 
 	tiber_mutex_destroy(&(tres->lock2));
-	tiber_cond_destroy(&(tres->cond2));
+	tiber_cond_destroy(&(tres->wait2));
 }
