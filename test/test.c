@@ -199,12 +199,12 @@ void* tb8_func(void* p)
 
 		int result = tiber_mutex_timedlock(&lock1, &wait_until);
 		if(result == ETIMEDOUT)
-			printf("ERROR, this must not timeout for task 8 @ %lu\n", millis_since_start());
-		else
 		{
-			printf("Locked for task 8 @ %lu\n", millis_since_start());
+			printf("ERROR, this must not timeout for task 8 @ %lu\n", millis_since_start());
 			exit(-1);
 		}
+		else
+			printf("Locked for task 8 @ %lu\n", millis_since_start());
 	}
 
 	{
