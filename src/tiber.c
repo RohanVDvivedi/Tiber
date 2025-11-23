@@ -202,17 +202,12 @@ static uint64_t timer_job_func(void* tr_v)
 		if(tb == NULL)
 			return BLOCKING;
 
-		// if the time has not elapsed yet, return the number of microseconds to wake up after
-		int timer_elapsed = (timespec_compare(tiber_now(), abstime_for_wakeup) >= 0);
-
-		if(!timer_elapsed)
+		// if the timeout has not elapsed, then go back to waiting
+		uint64_t microseconds_to_wake_up_in;
+		if(!has_tiber_timeout_elapsed(abstime_for_wakeup, &microseconds_to_wake_up_in))
 		{
-			uint64_t microseconds_to_wake_up_in = timespec_to_microseconds(timespec_sub(abstime_for_wakeup, now_time));
-			if(microseconds_to_wake_up_in > 3) // wakre this tiber only if it is less than 3 microseconds far from timeout
-			{
-				decrement_tiber_reference_count(tb);
-				return microseconds_to_wake_up_in;
-			}
+			decrement_tiber_reference_count(tb);
+			return microseconds_to_wake_up_in;
 		}
 
 		// wake the tiber and continue
@@ -359,14 +354,12 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 			}
 
 			// make sure that the timeout has not expired
+			if(has_tiber_timeout_elapsed(abstime_for_wakeup, NULL))
 			{
-				if(timespec_compare(tiber_now(), abstime_for_wakeup) >= 0)
-				{
-					pthread_spin_unlock(&(tm->lock));
-					curr_tiber->waiting_on_tiber_mutex = NULL;
-					pthread_spin_unlock(&(curr_tiber->state_lock));
-					return ETIMEDOUT;
-				}
+				pthread_spin_unlock(&(tm->lock));
+				curr_tiber->waiting_on_tiber_mutex = NULL;
+				pthread_spin_unlock(&(curr_tiber->state_lock));
+				return ETIMEDOUT;
 			}
 
 			insert_tail_in_linkedlist(&(tm->waiting_tibers), curr_tiber);
@@ -518,10 +511,8 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 	tiber_mutex_lock(tm);
 
 	// make sure that the timeout has not expired, if so return ETIMEDOUT
-	{
-		if(timespec_compare(tiber_now(), abstime_for_wakeup) >= 0)
-			return ETIMEDOUT;
-	}
+	if(has_tiber_timeout_elapsed(abstime_for_wakeup, NULL))
+		return ETIMEDOUT;
 
 	return 0;
 }
