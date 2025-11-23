@@ -1,8 +1,5 @@
 * PICKED TASKS
 
-  * implement result getter struct that works with both pthread and tiber based get
-  * implement join detach and delete runtime and delete tiber functions
-
 * TIBER
 
   * there can be missed wakeups if we insert to timer_queue while it is just about to pause the timer job
