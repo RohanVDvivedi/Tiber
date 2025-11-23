@@ -634,6 +634,17 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	return tb;
 }
 
+void delete_tiber(tiber* tb)
+{
+	deinitialize_tiber_result(&(tb->result));
+	pthread_spin_destroy(&(tb->context_lock));
+	pthread_spin_destroy(&(tb->state_lock));
+	pthread_spin_destroy(&(tb->reference_count_lock));
+
+	free(tb->stack);
+	free(tb);
+}
+
 int tiber_join(tiber* tb, void** return_value)
 {
 	pthread_spin_lock(&(tb->state_lock));
