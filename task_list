@@ -1,9 +1,6 @@
 * PICKED TASKS
-  * implement get time_spec now
-  * and has timeout elapsed, that also returns now
-  * add it as utils code 
 
-  * implement result getter struct that works with both pthread and tiber
+  * implement result getter struct that works with both pthread and tiber based get
   * implement join detach and delete runtime and delete tiber functions
 
 * TIBER
