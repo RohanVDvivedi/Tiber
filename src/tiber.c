@@ -211,7 +211,7 @@ static uint64_t timer_job_func(void* tr_v)
 		if(!timer_elapsed)
 		{
 			uint64_t microseconds_to_wake_up_in = timespec_to_microseconds(timespec_sub(abstime_for_wakeup, now_time));
-			if(microseconds_to_wake_up_in > 3) // go to sleep only if it is less than 3 microseconds, else wake it up
+			if(microseconds_to_wake_up_in > 3) // wakre this tiber only if it is less than 3 microseconds far from timeout
 			{
 				decrement_tiber_reference_count(tb);
 				return microseconds_to_wake_up_in;
