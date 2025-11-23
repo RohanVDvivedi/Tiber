@@ -106,15 +106,10 @@ void* tb4_func(void* p)
 uint64_t millis_since_start()
 {
 	static struct timespec start = {0};
+	if(timespec_is_zero(start))
+		start = tiber_now();
 
-	if (start.tv_sec == 0 && start.tv_nsec == 0)
-		clock_gettime(CLOCK_MONOTONIC, &start);
-
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-
-	return (now.tv_sec - start.tv_sec) * 1000LL +
-			(now.tv_nsec - start.tv_nsec) / 1000000LL;
+	return timespec_to_milliseconds(timespec_sub(tiber_now(), start));
 }
 
 void* tb5_func(void* p)
@@ -171,9 +166,7 @@ void* tb8_func(void* p)
 	tiber_msleep(10);
 
 	{
-		struct timespec wait_until;
-		clock_gettime(CLOCK_MONOTONIC, &wait_until);
-		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_milliseconds(2000));
 
 		int result = tiber_mutex_timedlock(&lock1, &wait_until);
 		if(result == ETIMEDOUT)
@@ -186,9 +179,7 @@ void* tb8_func(void* p)
 	}
 
 	{
-		struct timespec wait_until;
-		clock_gettime(CLOCK_MONOTONIC, &wait_until);
-		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_milliseconds(2000));
 
 		int result = tiber_mutex_timedlock(&lock1, &wait_until);
 		if(result == ETIMEDOUT)
@@ -201,18 +192,14 @@ void* tb8_func(void* p)
 	}
 
 	{
-		struct timespec wait_until;
-		clock_gettime(CLOCK_MONOTONIC, &wait_until);
-		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_milliseconds(2000));
 
 		int result = tiber_cond_timedwait(&wait1, &lock1, &wait_until);
 		printf("Woken up with ((result == ETIMEDOUT) -> %d, %d) for task 8 @ %lu\n", (result == ETIMEDOUT), result, millis_since_start());
 	}
 
 	{
-		struct timespec wait_until;
-		clock_gettime(CLOCK_MONOTONIC, &wait_until);
-		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_milliseconds(2000));
 
 		int result = tiber_cond_timedwait(&wait1, &lock1, &wait_until);
 		printf("Woken up with ((result == ETIMEDOUT) -> %d, %d) for task 8 @ %lu\n", (result == ETIMEDOUT), result, millis_since_start());
