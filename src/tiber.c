@@ -266,9 +266,17 @@ tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size)
 	return tr;
 }
 
-void delete_tiber_runtime(tiber_runtime* tr_p)
+void delete_tiber_runtime(tiber_runtime* tr)
 {
-	// TODO: how to safely destroy tiber runtime, we also need to pass a way to release all memory from queued tibers
+	shutdown_executor(tr->thread_pool, 1);
+	wait_for_all_executor_workers_to_complete(tr->thread_pool);
+	delete_executor(tr->thread_pool);
+
+	delete_alarm_job(tr->timer_job);
+
+	pthread_spin_destroy(&(tr->timer_lock));
+
+	free(tr);
 }
 
 // tiber mutex functions
