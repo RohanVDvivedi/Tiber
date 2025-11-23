@@ -202,11 +202,8 @@ static uint64_t timer_job_func(void* tr_v)
 		if(tb == NULL)
 			return BLOCKING;
 
-		struct timespec now_time;
-		clock_gettime(CLOCK_MONOTONIC, &now_time);
-
 		// if the time has not elapsed yet, return the number of microseconds to wake up after
-		int timer_elapsed = (timespec_compare(now_time, abstime_for_wakeup) >= 0);
+		int timer_elapsed = (timespec_compare(tiber_now(), abstime_for_wakeup) >= 0);
 
 		if(!timer_elapsed)
 		{
@@ -363,9 +360,7 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 
 			// make sure that the timeout has not expired
 			{
-				struct timespec now_time;
-				clock_gettime(CLOCK_MONOTONIC, &now_time);
-				if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
+				if(timespec_compare(tiber_now(), abstime_for_wakeup) >= 0)
 				{
 					pthread_spin_unlock(&(tm->lock));
 					curr_tiber->waiting_on_tiber_mutex = NULL;
@@ -524,9 +519,7 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 
 	// make sure that the timeout has not expired, if so return ETIMEDOUT
 	{
-		struct timespec now_time;
-		clock_gettime(CLOCK_MONOTONIC, &now_time);
-		if(timespec_compare(now_time, abstime_for_wakeup) >= 0)
+		if(timespec_compare(tiber_now(), abstime_for_wakeup) >= 0)
 			return ETIMEDOUT;
 	}
 
@@ -695,30 +688,21 @@ void tiber_abs_sleep(const struct timespec *abs_time)
 
 void tiber_sleep(uint64_t seconds)
 {
-	struct timespec now_time;
-	clock_gettime(CLOCK_MONOTONIC, &now_time);
-
-	struct timespec abs_time = timespec_add(now_time, timespec_from_seconds(seconds));
+	struct timespec abs_time = timespec_add(tiber_now(), timespec_from_seconds(seconds));
 
 	tiber_abs_sleep(&abs_time);
 }
 
 void tiber_msleep(uint64_t milliseconds)
 {
-	struct timespec now_time;
-	clock_gettime(CLOCK_MONOTONIC, &now_time);
-
-	struct timespec abs_time = timespec_add(now_time, timespec_from_milliseconds(milliseconds));
+	struct timespec abs_time = timespec_add(tiber_now(), timespec_from_milliseconds(milliseconds));
 
 	tiber_abs_sleep(&abs_time);
 }
 
 void tiber_usleep(uint64_t microseconds)
 {
-	struct timespec now_time;
-	clock_gettime(CLOCK_MONOTONIC, &now_time);
-
-	struct timespec abs_time = timespec_add(now_time, timespec_from_microseconds(microseconds));
+	struct timespec abs_time = timespec_add(tiber_now(), timespec_from_microseconds(microseconds));
 
 	tiber_abs_sleep(&abs_time);
 }
