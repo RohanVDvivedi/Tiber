@@ -1,5 +1,7 @@
 #include<tiber/tiber.h>
 
+#include<tiber/tiber_result.h>
+
 #include<stdio.h>
 #include<stdlib.h>
 

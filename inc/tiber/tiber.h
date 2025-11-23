@@ -90,8 +90,6 @@ struct tiber_result
 	tiber_cond wait2;
 };
 
-#include<tiber/tiber_result.h>
-
 typedef struct tiber tiber;
 struct tiber
 {
