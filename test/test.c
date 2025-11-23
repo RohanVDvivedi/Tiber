@@ -108,10 +108,10 @@ uint64_t millis_since_start()
 	static struct timespec start = {0};
 
 	if (start.tv_sec == 0 && start.tv_nsec == 0)
-		timespec_get(&start, CLOCK_MONOTONIC);
+		clock_gettime(CLOCK_MONOTONIC, &start);
 
 	struct timespec now;
-	timespec_get(&now, CLOCK_MONOTONIC);
+	clock_gettime(CLOCK_MONOTONIC, &now);
 
 	return (now.tv_sec - start.tv_sec) * 1000LL +
 			(now.tv_nsec - start.tv_nsec) / 1000000LL;
@@ -179,7 +179,7 @@ void* tb8_func(void* p)
 
 	{
 		struct timespec wait_until;
-		timespec_get(&wait_until, CLOCK_MONOTONIC);
+		clock_gettime(CLOCK_MONOTONIC, &wait_until);
 		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
 
 		int result = tiber_mutex_timedlock(&lock1, &wait_until);
@@ -194,7 +194,7 @@ void* tb8_func(void* p)
 
 	{
 		struct timespec wait_until;
-		timespec_get(&wait_until, CLOCK_MONOTONIC);
+		clock_gettime(CLOCK_MONOTONIC, &wait_until);
 		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
 
 		int result = tiber_mutex_timedlock(&lock1, &wait_until);
@@ -209,7 +209,7 @@ void* tb8_func(void* p)
 
 	{
 		struct timespec wait_until;
-		timespec_get(&wait_until, CLOCK_MONOTONIC);
+		clock_gettime(CLOCK_MONOTONIC, &wait_until);
 		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
 
 		int result = tiber_cond_timedwait(&wait1, &lock1, &wait_until);
@@ -218,7 +218,7 @@ void* tb8_func(void* p)
 
 	{
 		struct timespec wait_until;
-		timespec_get(&wait_until, CLOCK_MONOTONIC);
+		clock_gettime(CLOCK_MONOTONIC, &wait_until);
 		wait_until = timespec_add(wait_until, timespec_from_milliseconds(2000));
 
 		int result = tiber_cond_timedwait(&wait1, &lock1, &wait_until);
