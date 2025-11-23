@@ -156,19 +156,12 @@ void* tb7_func(void* p)
 
 	tiber_msleep(10);
 
-	tiber_mutex_lock(&lock1);
-	printf("Locked for task 7 @ %lu\n", millis_since_start());
-
 	tiber_msleep(3000);
 
+	tiber_mutex_lock(&lock1);
 	WAKEUP(&wait1);
-
-	tiber_msleep(500);
-
-	WAKEUP(&wait1);
-
 	tiber_mutex_unlock(&lock1);
-	printf("Unlocked for task 7 @ %lu\n", millis_since_start());
+	printf("WAKEUP from task 7 @ %lu\n", millis_since_start());
 
 	return NULL;
 }
