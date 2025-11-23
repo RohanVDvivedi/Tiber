@@ -722,3 +722,10 @@ void tiber_usleep(uint64_t microseconds)
 
 	tiber_abs_sleep(&abs_time);
 }
+
+struct timespec tiber_now()
+{
+	struct timespec now_time;
+	clock_gettime(CLOCK_MONOTONIC, &now_time);
+	return now_time;
+}

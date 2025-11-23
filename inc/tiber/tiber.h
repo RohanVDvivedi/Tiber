@@ -148,4 +148,7 @@ void tiber_sleep(uint64_t seconds);
 void tiber_msleep(uint64_t seconds);
 void tiber_usleep(uint64_t seconds);
 
+// gets the current time
+struct timespec tiber_now();
+
 #endif
