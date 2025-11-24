@@ -72,7 +72,13 @@ typedef enum tiber_state tiber_state;
 enum tiber_state
 {
 	TIBER_QUEUED,	// this is the initial state, with the tiber already pushed into the thread_pool
-	TIBER_RUNNING,
+
+	TIBER_RUNNING,	// this state is unique, as the tiber can get into this state or come out of this state only with context_lock (and ofcourse the state_lock) held
+					// this prevents multiple threads from simultaneously running the same tiber, while the earlier call is being unscheduled from the thread
+					// this also lets a tiber know when it returned safely from the entry_func so as to kill it
+
+	// any other valid state transition of tiber not including the TIBER_RUNNING state (neither as from_state nor as to_state) can be done with just the state_lock held
+
 	TIBER_WAITING,
 	TIBER_KILLED,
 };
