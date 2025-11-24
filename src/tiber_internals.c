@@ -81,7 +81,12 @@ static void* tiber_job_func(void* tb_v)
 	// now we are out of tiber's execution so proceed as if we are a thread, and not a tiber
 
 	if(need_to_delete_tiber)
+	{
+		// loop continuously while it's reference count does not reach 0
+		while(fetch_tiber_reference_count((tiber*)tb_v) > 0){}
+
 		delete_tiber((tiber*)tb_v);
+	}
 
 	return NULL;
 }

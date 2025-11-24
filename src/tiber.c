@@ -194,6 +194,9 @@ int tiber_join(tiber* tb, void** return_value)
 	// we got the return value, it must now have been killed so delete the tiber
 	(*return_value) = get_tiber_result(&(tb->result));
 
+	// loop continuously while it's reference count does not reach 0
+	while(fetch_tiber_reference_count(tb) > 0){}
+
 	delete_tiber(tb);
 
 	return 0;
@@ -218,6 +221,10 @@ int tiber_detach(tiber* tb)
 	if(need_to_delete_tiber)
 	{
 		get_tiber_result(&(tb->result));
+
+		// loop continuously while it's reference count does not reach 0
+		while(fetch_tiber_reference_count(tb) > 0){}
+
 		delete_tiber(tb);
 	}
 
