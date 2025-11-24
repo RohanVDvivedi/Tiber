@@ -101,21 +101,25 @@ int tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec 
 
 int tiber_cond_signal(tiber_cond* tc)
 {
-	// tiber to be woken up
-	tiber* tb = NULL;
+	int woke_up_some_tiber = 0;
 
-	pthread_spin_lock(&(tc->lock));
-
-	tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
-	if(tb != NULL)
-		increment_tiber_reference_count(tb);
-
-	pthread_spin_unlock(&(tc->lock));
-
-	if(tb != NULL)
+	// loop while we have not woken up any tiber yet
+	while(!woke_up_some_tiber)
 	{
-		wake_up_waiting_tiber(tb);
-		decrement_tiber_reference_count(tb);
+		pthread_spin_lock(&(tc->lock));
+
+		tiber* tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
+		if(tb != NULL)
+			increment_tiber_reference_count(tb);
+
+		pthread_spin_unlock(&(tc->lock));
+
+		// try to wake it up
+		if(tb != NULL)
+		{
+			woke_up_some_tiber = wake_up_waiting_tiber(tb);
+			decrement_tiber_reference_count(tb);
+		}
 	}
 
 	return 0;
@@ -125,23 +129,21 @@ int tiber_cond_broadcast(tiber_cond* tc)
 {
 	while(1)
 	{
-		// tiber to be woken up
-		tiber* tb = NULL;
-
 		pthread_spin_lock(&(tc->lock));
 
-		tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
+		tiber* tb = (tiber*) get_head_of_linkedlist(&(tc->waiting_tibers));
 		if(tb != NULL)
 			increment_tiber_reference_count(tb);
 
 		pthread_spin_unlock(&(tc->lock));
 
+		// try to wake it up
 		if(tb != NULL)
 		{
 			wake_up_waiting_tiber(tb);
 			decrement_tiber_reference_count(tb);
 		}
-		else
+		else // if empty we break
 			break;
 	}
 
