@@ -164,7 +164,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	makecontext(&(tb->context), (void(*)())tiber_entry_wrapper, 0);
 
 	pthread_spin_init(&(tb->state_lock), PTHREAD_PROCESS_PRIVATE);
-	tb->state = TIBER_QUEUED;
+	tb->state = TIBER_QUEUED;	// this is the initial state, as we will queue it riht after initialization
 	tb->is_detached = is_detached;
 
 	tb->waiting_on_tiber_cond = NULL;
