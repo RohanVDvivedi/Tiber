@@ -10,16 +10,6 @@ __thread tiber* curr_tiber = NULL;
 // the context that this tiber must return to is stored here for each of the threads, it is the context of the thread that this tiber must return to after execution
 __thread ucontext_t thread_context;
 
-// this function helps tiber actually have a return value, helpful when joining with the tiber
-void tiber_entry_wrapper()
-{
-	// run the tiber's entry_func
-	curr_tiber->return_value = curr_tiber->entry_func(curr_tiber->input_p);
-
-	// then kill it
-	tiber_kill();
-}
-
 /*
 	puts tiber as thread local variable of this thread
 	puts tiber in running state

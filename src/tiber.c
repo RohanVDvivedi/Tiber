@@ -7,6 +7,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+// tiber runtime's alarm_job and timer_queue's util functions
+
 static int compare_tibers_by_their_abstime_for_wakeup(const void* tb1_v, const void* tb2_v)
 {
 	return timespec_compare(((const tiber*)tb1_v)->abstime_for_wakeup, ((const tiber*)tb2_v)->abstime_for_wakeup);
@@ -116,6 +118,18 @@ void delete_tiber_runtime(tiber_runtime* tr)
 	pthread_spin_destroy(&(tr->timer_lock));
 
 	free(tr);
+}
+
+// tiber util functions
+
+// this function helps tiber actually have a return value, helpful when joining with the tiber
+static void tiber_entry_wrapper()
+{
+	// run the tiber's entry_func
+	curr_tiber->return_value = curr_tiber->entry_func(curr_tiber->input_p);
+
+	// then kill it
+	tiber_exit();
 }
 
 // tiber functions

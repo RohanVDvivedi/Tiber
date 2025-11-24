@@ -9,10 +9,6 @@ extern __thread tiber* curr_tiber;
 // the context that this tiber must return to is stored here for each of the threads, it is the context of the thread that this tiber must return to after execution
 extern __thread ucontext_t thread_context;
 
-// this is the wrapper function that ucintext will use as entry function
-// this function will call the entry function as stated in the curr_tiber and catch it's return value like a trampoline
-void tiber_entry_wrapper();
-
 // return back to the caller thread, to either wait, die or queue
 void switch_from_this_tiber_to_caller_thread();
 
