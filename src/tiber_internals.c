@@ -13,9 +13,11 @@ __thread ucontext_t thread_context;
 // this function helps tiber actually have a return value, helpful when joining with the tiber
 void tiber_entry_wrapper()
 {
+	// run the tiber's entry_func
 	curr_tiber->return_value = curr_tiber->entry_func(curr_tiber->input_p);
 
-	switch_from_this_tiber_to_caller_thread();
+	// then kill it
+	tiber_kill();
 }
 
 /*
@@ -33,47 +35,45 @@ static void* tiber_job_func(void* tb_v)
 	// set the thread local
 	curr_tiber = (tiber*)tb_v;
 
-	// change curr_tiber's state to running
-	pthread_spin_lock(&(curr_tiber->state_lock));
-	if(curr_tiber->state == TIBER_QUEUED)
-		curr_tiber->state = TIBER_RUNNING;
-	else
-	{
-		printf("TIBER BUG: tiber was queued to thread pool but is not in queued state\n");
-		exit(-1);
-	}
-	pthread_spin_unlock(&(curr_tiber->state_lock));
+	int need_to_set_tiber_result = 0;
+	int need_to_delete_tiber = 0;
 
-	// run curr_tiber, we only use this lock here and nowhere else
+	// we can transition a tiber in-to or out-of RUNNING state only while the context_lock is held
 	pthread_spin_lock(&(curr_tiber->context_lock));
-	if(-1 == getcontext(&thread_context))
 	{
-		printf("TIBER BUG: thread_context could not be populated\n");
-		exit(-1);
-	}
-	if(-1 == swapcontext(&thread_context, &(curr_tiber->context)))
-	{
-		printf("TIBER BUG: tiber could not context switch into itself\n");
-		exit(-1);
+		// change curr_tiber's state to running
+		pthread_spin_lock(&(curr_tiber->state_lock));
+		curr_tiber->state = TIBER_RUNNING;
+		pthread_spin_unlock(&(curr_tiber->state_lock));
+
+		// swap the context to run the tiber
+		if(-1 == getcontext(&thread_context))
+		{
+			printf("TIBER BUG: thread_context could not be populated\n");
+			exit(-1);
+		}
+		if(-1 == swapcontext(&thread_context, &(curr_tiber->context)))
+		{
+			printf("TIBER BUG: tiber could not context switch into itself\n");
+			exit(-1);
+		}
+
+		// change curr_tiber's state if running to killed
+		// because it returned from the entry function
+		pthread_spin_lock(&(curr_tiber->state_lock));
+		if(curr_tiber->state == TIBER_RUNNING)
+		{
+			need_to_set_tiber_result = 1; // we are killing it so we need to set its result
+			curr_tiber->state = TIBER_KILLED;
+			if(curr_tiber->is_detached)
+				need_to_delete_tiber = 1;	// if it was detached while we killed it, we need to delete it too
+		}
+		pthread_spin_unlock(&(curr_tiber->state_lock));
 	}
 	pthread_spin_unlock(&(curr_tiber->context_lock));
 
-	// change curr_tiber's state if running to killed
-	// because it returned from the entry function
-	int need_to_set_tiber_result = 0;
-	int need_to_delete_tiber = 0;
-	pthread_spin_lock(&(curr_tiber->state_lock));
-	if(curr_tiber->state == TIBER_RUNNING)
-	{
-		need_to_set_tiber_result = 1; // we are killing it so we need to set its result
-		curr_tiber->state = TIBER_KILLED;
-		if(curr_tiber->is_detached)
-			need_to_delete_tiber = 1;	// if it was detached while we killed it, we need to delete it too
-	}
-	pthread_spin_unlock(&(curr_tiber->state_lock));
-
 	if(need_to_set_tiber_result)
-		set_tiber_result(&(((tiber*)tb_v)->result), ((tiber*)tb_v)->return_value);
+		set_tiber_result(&(curr_tiber->result), curr_tiber->return_value);
 
 	// reset the thread local
 	curr_tiber = NULL;
