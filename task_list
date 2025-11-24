@@ -1,8 +1,11 @@
 * PICKED TASKS
+ * segregate tiber_cond and tiber_mutex functions
+ * segregate tiber_common functions
+ * segregate tiber_runtime functions
+ * wait until all reference counts reach 0, before deleting it
+ * new the new alarm job api
 
 * TIBER
-
-  * there can be missed wakeups if we insert to timer_queue while it is just about to pause/make-wait the timer job
 
   * implement epoll loop in ConnMan and come back for implementing IO functions here
   * make separate fixed sized thread pool running epoll loop on different clients, that wake up tibers that are waiting for io using a notify callback that triggers a tiber_cond to wake up that correct tiber
