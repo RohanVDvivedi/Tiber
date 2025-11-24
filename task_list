@@ -1,5 +1,5 @@
 * PICKED TASKS
- * while lool unlock, and signal to wake up atleast 1 successfully
+ * while loop unlock, and signal to wake up atleast 1 successfully
  * wait until all reference counts reach 0, before deleting it
 
 * TIBER
