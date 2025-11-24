@@ -140,14 +140,19 @@ int tiber_mutex_timedlock(tiber_mutex* tm, const struct timespec *abs_time)
 
 int tiber_mutex_unlock(tiber_mutex* tm)
 {
+	// first mark the lock as not held
+	pthread_spin_lock(&(tm->lock));
+	tm->is_locked = 0;
+	pthread_spin_unlock(&(tm->lock));
+
+	// then wake some tiber up
+
 	int woke_up_some_tiber = 0;
 
 	// loop while we have not woken up any tiber yet
 	while(!woke_up_some_tiber)
 	{
 		pthread_spin_lock(&(tm->lock));
-
-		tm->is_locked = 0;
 
 		tiber* tb = (tiber*) get_head_of_linkedlist(&(tm->waiting_tibers));
 		if(tb != NULL)
@@ -161,6 +166,8 @@ int tiber_mutex_unlock(tiber_mutex* tm)
 			woke_up_some_tiber = wake_up_waiting_tiber(tb);
 			decrement_tiber_reference_count(tb);
 		}
+		else // if empty we break
+			break;
 	}
 
 	return 0;

@@ -120,6 +120,8 @@ int tiber_cond_signal(tiber_cond* tc)
 			woke_up_some_tiber = wake_up_waiting_tiber(tb);
 			decrement_tiber_reference_count(tb);
 		}
+		else // if empty we break
+			break;
 	}
 
 	return 0;
