@@ -12,7 +12,26 @@ static int compare_tibers_by_their_abstime_for_wakeup(const void* tb1_v, const v
 	return timespec_compare(((const tiber*)tb1_v)->abstime_for_wakeup, ((const tiber*)tb2_v)->abstime_for_wakeup);
 }
 
-static uint64_t timer_job_func(void* tr_v)
+static uint64_t timer_set_func(void* tr_v)
+{
+	uint64_t microseconds_left;
+
+	tiber_runtime* tr = tr_v;
+
+	pthread_spin_lock(&(tr->timer_lock));
+
+	tiber* tb = (tiber*) get_top_of_pheap(&(tr->timer_queue));
+	if(tb != NULL)
+		has_tiber_timeout_elapsed(tb->abstime_for_wakeup, &microseconds_left);
+	else
+		microseconds_left = BLOCKING;
+
+	pthread_spin_unlock(&(tr->timer_lock));
+
+	return microseconds_left;
+}
+
+static void timer_job_func(void* tr_v)
 {
 	tiber_runtime* tr = tr_v;
 
@@ -34,16 +53,15 @@ static uint64_t timer_job_func(void* tr_v)
 
 		pthread_spin_unlock(&(tr->timer_lock));
 
-		// if tb is NULL, return BLOCKING
+		// if tb is NULL, return
 		if(tb == NULL)
-			return BLOCKING;
+			return;
 
 		// if the timeout has not elapsed, then go back to waiting
-		uint64_t microseconds_to_wake_up_in;
-		if(!has_tiber_timeout_elapsed(abstime_for_wakeup, &microseconds_to_wake_up_in))
+		if(!has_tiber_timeout_elapsed(abstime_for_wakeup, NULL))
 		{
 			decrement_tiber_reference_count(tb);
-			return microseconds_to_wake_up_in;
+			return;
 		}
 
 		// wake the tiber and continue
@@ -51,7 +69,7 @@ static uint64_t timer_job_func(void* tr_v)
 		decrement_tiber_reference_count(tb);
 	}
 
-	return BLOCKING;
+	return;
 }
 
 // tiber runtime functions
@@ -76,7 +94,7 @@ tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size)
 		exit(-1);
 	}
 
-	tr->timer_job = new_alarm_job(timer_job_func, tr);
+	tr->timer_job = new_alarm_job(timer_set_func, timer_job_func, tr);
 	if(tr->timer_job == NULL)
 	{
 		printf("TIBER BUG: tiber runtime, timer_job creation failed\n");
@@ -297,14 +315,15 @@ int has_tiber_timeout_elapsed(struct timespec abs_time, uint64_t* microseconds_l
 	if(microseconds_left == NULL)
 		microseconds_left = &microseconds_left_TEMP;
 
-	(*microseconds_left) = 0;
-
 	// fetch the current time
 	struct timespec now_time = tiber_now();
 
 	// if current time >= abs_time, we say the timeout has elapsed
 	if(timespec_compare(now_time, abs_time) >= 0)
+	{
+		(*microseconds_left) = 0;
 		return 1;
+	}
 
 	// else if the microseconds left is lesser than 3, then too the timer is said to have been elapsed
 	(*microseconds_left) = timespec_to_microseconds(timespec_sub(abs_time, now_time));
