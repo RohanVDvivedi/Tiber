@@ -1,7 +1,7 @@
 * PICKED TASKS
  * segregate tiber_cond and tiber_mutex functions
- * segregate tiber_common functions
- * segregate tiber_runtime functions
+ * segregate tiber_internal functions
+ * while lool unlock, and signal to wake up atleast 1 successfully
  * wait until all reference counts reach 0, before deleting it
  * new the new alarm job api
 
