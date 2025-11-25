@@ -113,7 +113,7 @@ void* producer_func(void* p)
 	int producer_id = ((uintptr_t)p);
 	for(unsigned long long int i = 0; i < OPERATIONS_PER_TASK; i++)
 	{
-		int to_produce_value = (producer_id * OPERATIONS_PER_TASK + i);
+		int to_produce_value = ((producer_id * OPERATIONS_PER_TASK) + i);
 
 		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(30));
 		if(!produce_int(&transfer, to_produce_value, &wait_until))
@@ -177,7 +177,8 @@ int main()
 	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
 	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));
 
-	heap_sort_int_queue(&(result.iq), 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints));
+	if(!heap_sort_int_queue(&(result.iq), 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints)))
+		printf("\n\nHEAP SORT FAILED\n\n");
 
 	for(int i = 0; i < TOTAL_INTS_SHUFFLED; i++)
 	{
