@@ -68,6 +68,20 @@ int tiber_cond_broadcast(tiber_cond* tc);
 
 // tiber itself
 
+/*
+	Tiber state diagram (very much like the OS threads)
+
+	(initial state)
+	TIBER_QUEUED <-----------> TIBER_RUNNING ---------> TIBER_KILLED
+	    /\                         |
+	    |                         \/
+	    +-------------------- TIBER_WAITNG
+
+	Any state transtions involving going in-to or out-of TIBER_RUNNING must be done with the context_lock and state_lock both held
+	All other state transitions can be done with only the state_lock held
+	Conversely, if you are currently in TIBER_RUNNING then be sure that context_lock will always be held, as it is done right before changing into TIBER_RUNNING state and obviously before context swapping into the tiber
+*/
+
 typedef enum tiber_state tiber_state;
 enum tiber_state
 {
