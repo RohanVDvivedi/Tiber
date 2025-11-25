@@ -5,7 +5,7 @@
 #include<unistd.h>
 
 #define RUNTIME_THREADS_COUNT 	16
-#define STACK_SIZE              64*1024
+#define STACK_SIZE              532*1024
 
 #define INCREMENTS_PER_TASK    10000ULL
 
@@ -63,10 +63,10 @@ int main()
 	tiber* tb2[TASKS_WITH_TIMEOUTS] = {};
 
 	for(unsigned long long int i = 0; i < TASKS_WITHOUT_TIMEOUTS; i++)
-		tb1[i] = new_tiber(tr, tb1_func, NULL, 16*1024, 0);
+		tb1[i] = new_tiber(tr, tb1_func, NULL, 64*1024, 0);
 
 	for(unsigned long long int i = 0; i < TASKS_WITH_TIMEOUTS; i++)
-		tb2[i] = new_tiber(tr, tb2_func, NULL, 16*1024, 0);
+		tb2[i] = new_tiber(tr, tb2_func, NULL, 64*1024, 0);
 
 	void* result = NULL;
 
