@@ -188,6 +188,8 @@ int main()
 		}
 	}
 
+	printf("TEST PASSED\n");
+
 	deinit_int_safe_queue(&transfer);
 	deinit_int_safe_queue(&result);
 	deinit_int_safe_queue(&missed);
