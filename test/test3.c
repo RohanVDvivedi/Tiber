@@ -9,14 +9,12 @@
 #define RUNTIME_THREADS_COUNT 	16
 #define STACK_SIZE              532*1024
 
-#define OPERATIONS_PER_TASK     1000ULL
+#define OPERATIONS              10000000ULL
 
 #define PRODUCER_TASKS          10000ULL
-#define CONSUMER_TASKS          PRODUCER_TASKS
+#define CONSUMER_TASKS          10000ULL
 
 #define TRANSFER_QUEUE_SIZE		100ULL
-
-#define TOTAL_INTS_SHUFFLED (OPERATIONS_PER_TASK * PRODUCER_TASKS)
 
 data_definitions_value_arraylist(int_queue, int)
 declarations_value_arraylist(int_queue, int, static inline) // last parameter can be empty
@@ -39,7 +37,7 @@ struct int_safe_queue
 
 void init_int_safe_queue(int_safe_queue* isq, cy_uint capacity)
 {
-	initialize_int_queue(&(isq->iq), TOTAL_INTS_SHUFFLED);
+	initialize_int_queue(&(isq->iq), capacity);
 	tiber_mutex_init(&(isq->lock));
 	tiber_cond_init(&(isq->full_wait));
 	tiber_cond_init(&(isq->empty_wait));
@@ -111,9 +109,9 @@ int_safe_queue missed;
 void* producer_func(void* p)
 {
 	int producer_id = ((uintptr_t)p);
-	for(unsigned long long int i = 0; i < OPERATIONS_PER_TASK; i++)
+	for(unsigned long long int i = 0; i < (OPERATIONS / PRODUCER_TASKS); i++)
 	{
-		int to_produce_value = ((producer_id * OPERATIONS_PER_TASK) + i);
+		int to_produce_value = ((producer_id * (OPERATIONS / PRODUCER_TASKS)) + i);
 
 		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(5));
 		if(!produce_int(&transfer, to_produce_value, &wait_until))
@@ -125,7 +123,7 @@ void* producer_func(void* p)
 
 void* consumer_func(void* p)
 {
-	for(unsigned long long int i = 0; i < OPERATIONS_PER_TASK; i++)
+	for(unsigned long long int i = 0; i < (OPERATIONS / CONSUMER_TASKS); i++)
 	{
 		int consumed_value;
 
@@ -140,8 +138,8 @@ void* consumer_func(void* p)
 int main()
 {
 	init_int_safe_queue(&transfer, TRANSFER_QUEUE_SIZE);
-	init_int_safe_queue(&result, TOTAL_INTS_SHUFFLED);
-	init_int_safe_queue(&missed, TOTAL_INTS_SHUFFLED);
+	init_int_safe_queue(&result, OPERATIONS);
+	init_int_safe_queue(&missed, OPERATIONS);
 
 	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
 
@@ -177,10 +175,10 @@ int main()
 	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
 	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));
 
-	if(!heap_sort_int_queue(&(result.iq), 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints)))
+	if(!heap_sort_int_queue(&(result.iq), 0, OPERATIONS - 1, &simple_comparator(compare_ints)))
 		printf("\n\nHEAP SORT FAILED\n\n");
 
-	for(int i = 0; i < TOTAL_INTS_SHUFFLED; i++)
+	for(int i = 0; i < OPERATIONS; i++)
 	{
 		if(i == (*get_front_of_int_queue(&(result.iq))))
 			pop_front_from_int_queue(&(result.iq));
