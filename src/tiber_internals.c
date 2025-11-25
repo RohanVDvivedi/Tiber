@@ -93,7 +93,7 @@ void switch_from_this_tiber_to_caller_thread()
 
 void queue_tiber_to_runime(tiber* tb)
 {
-	if(0 == submit_job_executor(tb->runtime->thread_pool, tiber_job_func, tb, NULL, NULL, BLOCKING))
+	if(0 == submit_job_executor(tb->runtime->thread_pool, tiber_job_func, tb, NULL, (void (*)(void*))delete_tiber, BLOCKING))
 	{
 		printf("TIBER BUG: tiber was suppoed to be queued but it failed\n");
 		exit(-1);
