@@ -50,6 +50,8 @@ int produce_int(int_queue* iq, int v, struct timespec* abstime)
 	}
 
 	int pushed = push_back_to_int_queue(iq, &v);
+	if(pushed)
+		tiber_cond_signal(&empty_wait);
 
 	tiber_mutex_unlock(&lock);
 
@@ -76,6 +78,9 @@ int consume_int(int_queue* iq, int* v, struct timespec* abstime)
 		(*v) = *get_front_of_int_queue(iq);
 		popped = pop_front_from_int_queue(iq);
 	}
+
+	if(popped)
+		tiber_cond_signal(&full_wait);
 
 	tiber_mutex_unlock(&lock);
 
