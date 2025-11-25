@@ -9,12 +9,12 @@
 #define RUNTIME_THREADS_COUNT 	16
 #define STACK_SIZE              532*1024
 
-#define OPERATIONS_PER_TASK   10000ULL
+#define OPERATIONS_PER_TASK     10000ULL
 
 #define PRODUCER_TASKS          1000ULL
 #define CONSUMER_TASKS          PRODUCER_TASKS
 
-#define TRANSFER_QUEUE_SIZE		1000ULL
+#define TRANSFER_QUEUE_SIZE		2ULL
 
 #define TOTAL_INTS_SHUFFLED (OPERATIONS_PER_TASK * PRODUCER_TASKS)
 
@@ -115,7 +115,7 @@ void* producer_func(void* p)
 	{
 		int to_produce_value = ((producer_id * OPERATIONS_PER_TASK) + i);
 
-		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(30));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(5));
 		if(!produce_int(&transfer, to_produce_value, &wait_until))
 			produce_int(&missed, to_produce_value, NULL);
 	}
@@ -129,7 +129,7 @@ void* consumer_func(void* p)
 	{
 		int consumed_value;
 
-		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(30));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(5));
 		if(consume_int(&transfer, &consumed_value, &wait_until))
 			produce_int(&result, consumed_value, NULL);
 	}
