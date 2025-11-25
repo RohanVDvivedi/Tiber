@@ -1,5 +1,4 @@
 * PICKED TASKS
- * run test2 with valgrind
  * implement test3 with bounded queue and condition varibale and with it's timed wait
 
 * TIBER
