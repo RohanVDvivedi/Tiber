@@ -23,6 +23,11 @@ declarations_value_arraylist(int_queue, int, static inline) // last parameter ca
 #define EXPANSION_FACTOR 1.5
 function_definitions_value_arraylist(int_queue, int, static inline) // last parameter can be empty
 
+int compare_ints(const void* a, const void* b)
+{
+	return compare_numbers(((const int*)a), ((const int*)b));
+}
+
 int_queue transfer;
 int_queue result;
 int_queue missed;
@@ -127,19 +132,42 @@ int main()
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
 		ctb[i] = new_tiber(tr, consumer_func, NULL, 64*1024, 0);
 
-	void* result = NULL;
+	void* result_temp = NULL;
 
 	for(unsigned long long int i = 0; i < PRODUCER_TASKS; i++)
-		tiber_join(ptb[i], &result);
+		tiber_join(ptb[i], &result_temp);
 
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
-		tiber_join(ctb[i], &result);
+		tiber_join(ctb[i], &result_temp);
 
 	delete_tiber_runtime(tr);
 
 	tiber_mutex_destroy(&lock);
 	tiber_cond_destroy(&full_wait);
 	tiber_cond_destroy(&empty_wait);
+
+	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&result));
+	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&missed));
+
+	while(!is_empty_int_queue(&missed))
+	{
+		push_back_to_int_queue(&result, get_front_of_int_queue(&missed));
+		pop_front_from_int_queue(&missed);
+	}
+
+	printf("\n\n");
+	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&result));
+	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&missed));
+
+	heap_sort_int_queue(&result, 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints));
+
+	for(int i = 0; i < TOTAL_INTS_SHUFFLED; i++)
+	{
+		if(i == (*get_front_of_int_queue(&result)))
+			pop_front_from_int_queue(&result);
+		else
+			printf("missing %d\n", i);
+	}
 
 	printf("TEST COMPLETE\n");
 
