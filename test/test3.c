@@ -28,64 +28,85 @@ int compare_ints(const void* a, const void* b)
 	return compare_numbers(((const int*)a), ((const int*)b));
 }
 
-int_queue transfer;
-int_queue result;
-int_queue missed;
-
-tiber_mutex lock;
-tiber_cond full_wait;
-tiber_cond empty_wait;
-
-int produce_int(int_queue* iq, int v, struct timespec* abstime)
+typedef struct int_safe_queue int_safe_queue;
+struct int_safe_queue
 {
-	tiber_mutex_lock(&lock);
+	int_queue iq;
+	tiber_mutex lock;
+	tiber_cond full_wait;
+	tiber_cond empty_wait;
+};
+
+void init_int_safe_queue(int_safe_queue* isq, cy_uint capacity)
+{
+	initialize_int_queue(&(isq->iq), TOTAL_INTS_SHUFFLED);
+	tiber_mutex_init(&(isq->lock));
+	tiber_cond_init(&(isq->full_wait));
+	tiber_cond_init(&(isq->empty_wait));
+}
+
+void deinit_int_safe_queue(int_safe_queue* isq)
+{
+	deinitialize_int_queue(&(isq->iq));
+	tiber_mutex_destroy(&(isq->lock));
+	tiber_cond_destroy(&(isq->full_wait));
+	tiber_cond_destroy(&(isq->empty_wait));
+}
+
+int produce_int(int_safe_queue* isq, int v, struct timespec* abstime)
+{
+	tiber_mutex_lock(&(isq->lock));
 
 	int wait_error = 0;
-	while(is_full_int_queue(iq) && !wait_error)
+	while(is_full_int_queue(&(isq->iq)) && !wait_error)
 	{
 		if(abstime == NULL)
-			wait_error = tiber_cond_wait(&full_wait, &lock);
+			wait_error = tiber_cond_wait(&(isq->full_wait), &(isq->lock));
 		else
-			wait_error = tiber_cond_timedwait(&full_wait, &lock, abstime);
+			wait_error = tiber_cond_timedwait(&(isq->full_wait), &(isq->lock), abstime);
 	}
 
-	int pushed = push_back_to_int_queue(iq, &v);
+	int pushed = push_back_to_int_queue(&(isq->iq), &v);
 	if(pushed)
-		tiber_cond_signal(&empty_wait);
+		tiber_cond_signal(&(isq->empty_wait));
 
-	tiber_mutex_unlock(&lock);
+	tiber_mutex_unlock(&(isq->lock));
 
 	return pushed;
 }
 
-int consume_int(int_queue* iq, int* v, struct timespec* abstime)
+int consume_int(int_safe_queue* isq, int* v, struct timespec* abstime)
 {
 	int popped = 0;
 
-	tiber_mutex_lock(&lock);
+	tiber_mutex_lock(&(isq->lock));
 
 	int wait_error = 0;
-	while(is_empty_int_queue(iq) && !wait_error)
+	while(is_empty_int_queue(&(isq->iq)) && !wait_error)
 	{
 		if(abstime == NULL)
-			wait_error = tiber_cond_wait(&empty_wait, &lock);
+			wait_error = tiber_cond_wait(&(isq->empty_wait), &(isq->lock));
 		else
-			wait_error = tiber_cond_timedwait(&empty_wait, &lock, abstime);
+			wait_error = tiber_cond_timedwait(&(isq->empty_wait), &(isq->lock), abstime);
 	}
 
-	if(!is_empty_int_queue(iq))
+	if(!is_empty_int_queue(&(isq->iq)))
 	{
-		(*v) = *get_front_of_int_queue(iq);
-		popped = pop_front_from_int_queue(iq);
+		(*v) = *get_front_of_int_queue(&(isq->iq));
+		popped = pop_front_from_int_queue(&(isq->iq));
 	}
 
 	if(popped)
-		tiber_cond_signal(&full_wait);
+		tiber_cond_signal(&(isq->full_wait));
 
-	tiber_mutex_unlock(&lock);
+	tiber_mutex_unlock(&(isq->lock));
 
 	return popped;
 }
+
+int_safe_queue transfer;
+int_safe_queue result;
+int_safe_queue missed;
 
 void* producer_func(void* p)
 {
@@ -118,13 +139,9 @@ void* consumer_func(void* p)
 
 int main()
 {
-	initialize_int_queue(&transfer, TRANSFER_QUEUE_SIZE);
-	initialize_int_queue(&result, TOTAL_INTS_SHUFFLED);
-	initialize_int_queue(&missed, TOTAL_INTS_SHUFFLED);
-
-	tiber_mutex_init(&lock);
-	tiber_cond_init(&full_wait);
-	tiber_cond_init(&empty_wait);
+	init_int_safe_queue(&transfer, TRANSFER_QUEUE_SIZE);
+	init_int_safe_queue(&result, TOTAL_INTS_SHUFFLED);
+	init_int_safe_queue(&missed, TOTAL_INTS_SHUFFLED);
 
 	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
 
@@ -147,32 +164,32 @@ int main()
 
 	delete_tiber_runtime(tr);
 
-	tiber_mutex_destroy(&lock);
-	tiber_cond_destroy(&full_wait);
-	tiber_cond_destroy(&empty_wait);
+	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
+	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));
 
-	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&result));
-	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&missed));
-
-	while(!is_empty_int_queue(&missed))
+	while(!is_empty_int_queue(&(missed.iq)))
 	{
-		push_back_to_int_queue(&result, get_front_of_int_queue(&missed));
-		pop_front_from_int_queue(&missed);
+		push_back_to_int_queue(&(result.iq), get_front_of_int_queue(&(missed.iq)));
+		pop_front_from_int_queue(&(missed.iq));
 	}
 
 	printf("\n\n");
-	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&result));
-	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&missed));
+	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
+	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));
 
-	heap_sort_int_queue(&result, 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints));
+	heap_sort_int_queue(&(result.iq), 0, TOTAL_INTS_SHUFFLED - 1, &simple_comparator(compare_ints));
 
 	for(int i = 0; i < TOTAL_INTS_SHUFFLED; i++)
 	{
-		if(i == (*get_front_of_int_queue(&result)))
-			pop_front_from_int_queue(&result);
+		if(i == (*get_front_of_int_queue(&(result.iq))))
+			pop_front_from_int_queue(&(result.iq));
 		else
 			printf("missing %d\n", i);
 	}
+
+	deinit_int_safe_queue(&transfer);
+	deinit_int_safe_queue(&result);
+	deinit_int_safe_queue(&missed);
 
 	printf("TEST COMPLETE\n");
 
