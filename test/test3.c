@@ -172,8 +172,7 @@ int main()
 	}
 
 	printf("\n\n");
-	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
-	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));
+	printf("total count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
 
 	if(!heap_sort_int_queue(&(result.iq), 0, OPERATIONS - 1, &simple_comparator(compare_ints)))
 		printf("\n\nHEAP SORT FAILED\n\n");
