@@ -11,10 +11,10 @@
 
 #define OPERATIONS              10000000ULL
 
-#define PRODUCER_TASKS          10000ULL
-#define CONSUMER_TASKS          10000ULL
+#define PRODUCER_TASKS          1000ULL
+#define CONSUMER_TASKS          1000ULL
 
-#define TRANSFER_QUEUE_SIZE		100ULL
+#define TRANSFER_QUEUE_SIZE		70ULL
 
 data_definitions_value_arraylist(int_queue, int)
 declarations_value_arraylist(int_queue, int, static inline) // last parameter can be empty
