@@ -186,7 +186,7 @@ int main()
 			pop_front_from_int_queue(&(result.iq));
 		else
 		{
-			printf("missing %d\n", i);
+			printf("missing %d instead found %d\n", i, (*get_front_of_int_queue(&(result.iq))));
 			exit(-1);
 		}
 	}
