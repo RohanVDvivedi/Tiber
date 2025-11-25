@@ -184,7 +184,10 @@ int main()
 		if(i == (*get_front_of_int_queue(&(result.iq))))
 			pop_front_from_int_queue(&(result.iq));
 		else
+		{
 			printf("missing %d\n", i);
+			exit(-1);
+		}
 	}
 
 	deinit_int_safe_queue(&transfer);
