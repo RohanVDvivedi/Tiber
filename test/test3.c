@@ -25,7 +25,7 @@ function_definitions_value_arraylist(int_queue, int, static inline) // last para
 
 int compare_ints(const void* a, const void* b)
 {
-	return compare_numbers(((const int*)a), ((const int*)b));
+	return compare_numbers(*((const int*)a), *((const int*)b));
 }
 
 typedef struct int_safe_queue int_safe_queue;
