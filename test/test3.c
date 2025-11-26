@@ -142,7 +142,7 @@ void* producer_func(void* p)
 	{
 		int to_produce_value = ((producer_id * (OPERATIONS / PRODUCER_TASKS)) + i);
 
-		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(5));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(15));
 		if(!produce_int(&transfer, to_produce_value, &wait_until))
 			produce_int(&missed, to_produce_value, NULL);
 	}
@@ -158,7 +158,7 @@ void* consumer_func(void* p)
 	{
 		int consumed_value;
 
-		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(5));
+		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(15));
 		if(consume_int(&transfer, &consumed_value, &wait_until))
 			produce_int(&result, consumed_value, NULL);
 	}
