@@ -158,8 +158,7 @@ void* consumer_func(void* p)
 	{
 		int consumed_value;
 
-		struct timespec wait_until = timespec_add(tiber_now(), timespec_from_microseconds(15));
-		if(consume_int(&transfer, &consumed_value, &wait_until))
+		if(consume_int(&transfer, &consumed_value, NULL))
 			produce_int(&result, consumed_value, NULL);
 	}
 
