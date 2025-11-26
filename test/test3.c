@@ -30,14 +30,16 @@ typedef struct int_safe_queue int_safe_queue;
 struct int_safe_queue
 {
 	int_queue iq;
+	uint64_t producers_count;
 	tiber_mutex lock;
 	tiber_cond full_wait;
 	tiber_cond empty_wait;
 };
 
-void init_int_safe_queue(int_safe_queue* isq, cy_uint capacity)
+void init_int_safe_queue(int_safe_queue* isq, cy_uint capacity, uint64_t producers_count)
 {
 	initialize_int_queue(&(isq->iq), capacity);
+	isq->producers_count = producers_count;
 	tiber_mutex_init(&(isq->lock));
 	tiber_cond_init(&(isq->full_wait));
 	tiber_cond_init(&(isq->empty_wait));
@@ -45,15 +47,42 @@ void init_int_safe_queue(int_safe_queue* isq, cy_uint capacity)
 
 void deinit_int_safe_queue(int_safe_queue* isq)
 {
+	isq->producers_count = 0;
 	deinitialize_int_queue(&(isq->iq));
 	tiber_mutex_destroy(&(isq->lock));
 	tiber_cond_destroy(&(isq->full_wait));
 	tiber_cond_destroy(&(isq->empty_wait));
 }
 
+int decrement_producers_count(int_safe_queue* isq)
+{
+	tiber_mutex_lock(&(isq->lock));
+
+	int decremented = 0;
+	if(isq->producers_count > 0)
+	{
+		isq->producers_count--;
+		decremented = 1;
+
+		// wake up all consumers waiting on the queue being empty
+		tiber_cond_broadcast(&(isq->empty_wait));
+	}
+
+	tiber_mutex_unlock(&(isq->lock));
+
+	return decremented;
+}
+
 int produce_int(int_safe_queue* isq, int v, struct timespec* abstime)
 {
 	tiber_mutex_lock(&(isq->lock));
+
+	// if there are no producers in the system do not let them produce anything
+	if(isq->producers_count == 0)
+	{
+		tiber_mutex_unlock(&(isq->lock));
+		return 0;
+	}
 
 	int wait_error = 0;
 	while(is_full_int_queue(&(isq->iq)) && !wait_error)
@@ -80,7 +109,7 @@ int consume_int(int_safe_queue* isq, int* v, struct timespec* abstime)
 	tiber_mutex_lock(&(isq->lock));
 
 	int wait_error = 0;
-	while(is_empty_int_queue(&(isq->iq)) && !wait_error)
+	while(is_empty_int_queue(&(isq->iq)) && isq->producers_count > 0 && !wait_error) // consumers may wait only if there will be producers in the system
 	{
 		if(abstime == NULL)
 			wait_error = tiber_cond_wait(&(isq->empty_wait), &(isq->lock));
@@ -118,6 +147,8 @@ void* producer_func(void* p)
 			produce_int(&missed, to_produce_value, NULL);
 	}
 
+	decrement_producers_count(&transfer);
+
 	return NULL;
 }
 
@@ -132,14 +163,16 @@ void* consumer_func(void* p)
 			produce_int(&result, consumed_value, NULL);
 	}
 
+	decrement_producers_count(&result);
+
 	return NULL;
 }
 
 int main()
 {
-	init_int_safe_queue(&transfer, TRANSFER_QUEUE_SIZE);
-	init_int_safe_queue(&result, OPERATIONS);
-	init_int_safe_queue(&missed, OPERATIONS);
+	init_int_safe_queue(&transfer, TRANSFER_QUEUE_SIZE, PRODUCER_TASKS);
+	init_int_safe_queue(&result, OPERATIONS, CONSUMER_TASKS);
+	init_int_safe_queue(&missed, OPERATIONS, PRODUCER_TASKS);
 
 	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
 
