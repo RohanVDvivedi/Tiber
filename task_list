@@ -1,13 +1,5 @@
 * PICKED TASKS
 
- * integration with main
-  * check if a tiber is created from another tiber
-  * if runtime is empty, then copy it from the current tiber's runtime
-  * if curr_tiber and runtime are both NULL, then exit with error message
-
-  * make a symbol for int tiber_main(int argc, char** argv);
-  * and call it from the main thread that creates a tiber and calls tiber_main and waits for it join, then shuts down the tiber runtime created in main
-
 * TIBER
 
   * implement tiber_epoll
