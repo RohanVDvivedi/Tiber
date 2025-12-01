@@ -1,7 +1,6 @@
 * PICKED TASKS
 
-* TIBER
-
+* TIBER IO
   * implement tiber_epoll
     * that has an infinite loop function that does IO
     * maintains a data struct for 
