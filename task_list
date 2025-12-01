@@ -1,5 +1,12 @@
 * PICKED TASKS
 
+  * check if a tiber is created from another tiber
+  * if runtime is empty, then copy it from the current tiber's runtime
+  * if curr_tiber and runtime are both NULL, then exit with error message
+
+  * make a symbol for int tiber_main(int argc, char** argv);
+  * and call it from the main thread that creates a tiber and calls tiber_main and waits for it join, then shuts down the tiber runtime created in main
+
 * TIBER
 
   * implement tiber_epoll
@@ -39,9 +46,3 @@
     * epoll loop is simple waits for N events, once received, based on the event takes lock removed the reader or writer or both and signals them and quits
     * the epoll loop maintains the hashmap of 256 redblack tree based buckets, poiting fd to their tiber_epoll_data
     * registering file descriptors and closing it will be taken in account later
-
-  * find a way to safely replace all the pthread downstreams with this
-    * using library reordering and -include flag to #include a converted that #defines all pthread structs and functions to tiber structs and functions
-  * find a way to integrate it into the main thread
-    * make main thread create a global tiber_runtime with 24KB stack space on threads and thread count being the number of CPU cores
-    * use default runtime to create new tibers
