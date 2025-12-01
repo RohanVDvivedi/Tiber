@@ -147,7 +147,15 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 		return NULL;
 	}
 
-	tb->runtime = tr;
+	if(tr != NULL)	// if a runtime is provided use that one
+		tb->runtime = tr;
+	else if(curr_tiber != NULL) // else copy the runtime of the curr_tiber
+		tb->runtime = curr_tiber->runtime;
+	else
+	{
+		printf("TIBER BUG: tiber runtime was not provided or available for tiber creation\n");
+		exit(-1);
+	}
 
 	tb->input_p = input_p;
 	tb->entry_func = entry_func;
