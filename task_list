@@ -3,7 +3,7 @@
 * TIBER IO
   * implement tiber_epoll
     * that has an infinite loop function that does IO
-    * maintains a data struct for 
+    * maintains a data struct for in a hashmap<int, tiber_epoll_data> and also in the epoll_event's data member
       struct tiber_epoll_data
       {
         // file descriptor
@@ -11,30 +11,24 @@
 
         tiber_mutex lock;
 
-        // for read side
-        singlylist read_waiters;
+        // broadcast here if read available
+        tiber_cond read_wait;
 
-        // for write side
-        singlylist write_waiters;
+        // broadcast here if write avaiable
+        tiber_cond write_wait;
 
+        // always broadcast here, where read or write anything available
+        tiber_cond read_or_write_wait;
+
+        // to put in a hashmap that maps from fd -> pointer to this struct
         bstnode fd_list;
       }
-    * every waiter that gets EAGAIN/EWOULDBLOCK/EINPROGRESS waits by putting itself in the waiters queue using a struct
-      struct tiber_epoll_waiter
-      {
-        tiber* tb;
-        tiber_cond wait;
-
-        slnode embed_node_for_read_waiters;
-        slnode embed_node_for_write_waiters;
-      };
     * for tiber_read(int fd, ...) or tiber_write(int fd, ...) or even tiber_connect and tiber_accept
-      * in a loop first attempt to call it optimistically, if it fails with EAGAIN/EWOULDBLOCK/EINPROGRESS (always do the optimistic version first)
+      * in a loop first attempt to call it optimistically, if it fails with EAGAIN/EWOULDBLOCK/EINPROGRESS go ahead with the next part (always do the optimistic version first)
       * take lock
-      * attempt to do non-blocking read or write again using the actual system call
-      * if it fails with EAGAIN/EWOULDBLOCK/EINPROGRESS, then construct a local tiber_epoll_waiter and push it into the queue
-      * then go into waiting on the wait
-      * once woken up, remove your self from both the waiters queue and loop over again
-    * epoll loop is simple waits for N events, once received, based on the event takes lock removed the reader or writer or both and signals them and quits
-    * the epoll loop maintains the hashmap of 256 redblack tree based buckets, poiting fd to their tiber_epoll_data
-    * registering file descriptors and closing it will be taken in account later
+      * attempt to do non-blocking read or write again using the actual system call again just like the optimistic version, if success return with bytes written
+      * if it fails with EAGAIN/EWOULDBLOCK/EINPROGRESS, then wait over read_wait or write_wait or read_or_write_wait
+      * once woken up, release lock and continue
+    * epoll loop is simple waits for N events, once received, based on the event takes lock and wakes up corresponding waiters
+    * the epoll loop maintains the hashmap of 256 redblack tree based buckets, pointing fd to their tiber_epoll_data
+    * registering file descriptors and closing it will be worked on later
