@@ -1,5 +1,6 @@
 * PICKED TASKS
 
+ * integration with main
   * check if a tiber is created from another tiber
   * if runtime is empty, then copy it from the current tiber's runtime
   * if curr_tiber and runtime are both NULL, then exit with error message
