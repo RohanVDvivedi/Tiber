@@ -52,21 +52,21 @@ void* tb2_func(void* p)
 	return NULL;
 }
 
-int main()
+int tiber_main()
 {
 	tiber_mutex_init(&counter_lock);
 	tiber_mutex_init(&missed_counter_lock);
 
-	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
-
 	tiber* tb1[TASKS_WITHOUT_TIMEOUTS] = {};
 	tiber* tb2[TASKS_WITH_TIMEOUTS] = {};
 
+	// use the global runtime
 	for(unsigned long long int i = 0; i < TASKS_WITHOUT_TIMEOUTS; i++)
-		tb1[i] = new_tiber(tr, tb1_func, NULL, 64*1024, 0);
+		tb1[i] = new_tiber(NULL, tb1_func, NULL, 64*1024, 0);
 
+	// use the global runtime
 	for(unsigned long long int i = 0; i < TASKS_WITH_TIMEOUTS; i++)
-		tb2[i] = new_tiber(tr, tb2_func, NULL, 64*1024, 0);
+		tb2[i] = new_tiber(NULL, tb2_func, NULL, 64*1024, 0);
 
 	void* result = NULL;
 
@@ -75,8 +75,6 @@ int main()
 
 	for(unsigned long long int i = 0; i < TASKS_WITH_TIMEOUTS; i++)
 		tiber_join(tb2[i], &result);
-
-	delete_tiber_runtime(tr);
 
 	tiber_mutex_destroy(&counter_lock);
 	tiber_mutex_destroy(&missed_counter_lock);

@@ -167,22 +167,22 @@ void* consumer_func(void* p)
 	return NULL;
 }
 
-int main()
+int tiber_main()
 {
 	init_int_safe_queue(&transfer, TRANSFER_QUEUE_SIZE, PRODUCER_TASKS);
 	init_int_safe_queue(&result, OPERATIONS, CONSUMER_TASKS);
 	init_int_safe_queue(&missed, OPERATIONS, PRODUCER_TASKS);
 
-	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
-
 	tiber* ptb[PRODUCER_TASKS] = {};
 	tiber* ctb[CONSUMER_TASKS] = {};
 
+	// use the global runtime
 	for(unsigned long long int i = 0; i < PRODUCER_TASKS; i++)
-		ptb[i] = new_tiber(tr, producer_func, (void*)((uintptr_t)i), 64*1024, 0);
+		ptb[i] = new_tiber(NULL, producer_func, (void*)((uintptr_t)i), 64*1024, 0);
 
+	// use the global runtime
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
-		ctb[i] = new_tiber(tr, consumer_func, NULL, 64*1024, 0);
+		ctb[i] = new_tiber(NULL, consumer_func, NULL, 64*1024, 0);
 
 	void* result_temp = NULL;
 
@@ -191,8 +191,6 @@ int main()
 
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
 		tiber_join(ctb[i], &result_temp);
-
-	delete_tiber_runtime(tr);
 
 	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
 	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));

@@ -225,7 +225,7 @@ void* tb9_func(void* p)
 	return NULL;
 }
 
-int main()
+int tiber_main()
 {
 	millis_since_start();
 
@@ -235,19 +235,18 @@ int main()
 	tiber_mutex_init(&lock1);
 	tiber_cond_init(&wait1);
 
-	tiber_runtime* tr = new_tiber_runtime(RUNTIME_THREADS_COUNT, STACK_SIZE);
-
 	tiber* tb[20] = {};
 
-	tb[1] = new_tiber(tr, tb1_func, NULL, 16*1024, 0);
-	tb[2] = new_tiber(tr, tb2_func, NULL, 16*1024, 0);
-	tb[3] = new_tiber(tr, tb3_func, NULL, 16*1024, 0);
-	tb[4] = new_tiber(tr, tb4_func, NULL, 16*1024, 0);
-	tb[5] = new_tiber(tr, tb5_func, NULL, 16*1024, 0);
-	tb[6] = new_tiber(tr, tb6_func, NULL, 16*1024, 0);
-	tb[7] = new_tiber(tr, tb7_func, NULL, 16*1024, 0);
-	tb[8] = new_tiber(tr, tb8_func, NULL, 16*1024, 0);
-	tb[9] = new_tiber(tr, tb9_func, tb, 16*1024, 0);
+	// use the global runtime
+	tb[1] = new_tiber(NULL, tb1_func, NULL, 16*1024, 0);
+	tb[2] = new_tiber(NULL, tb2_func, NULL, 16*1024, 0);
+	tb[3] = new_tiber(NULL, tb3_func, NULL, 16*1024, 0);
+	tb[4] = new_tiber(NULL, tb4_func, NULL, 16*1024, 0);
+	tb[5] = new_tiber(NULL, tb5_func, NULL, 16*1024, 0);
+	tb[6] = new_tiber(NULL, tb6_func, NULL, 16*1024, 0);
+	tb[7] = new_tiber(NULL, tb7_func, NULL, 16*1024, 0);
+	tb[8] = new_tiber(NULL, tb8_func, NULL, 16*1024, 0);
+	tb[9] = new_tiber(NULL, tb9_func, tb, 16*1024, 0);
 
 	void* return_value;
 	tiber_join(tb[9], &return_value);
@@ -258,8 +257,6 @@ int main()
 
 	tiber_mutex_destroy(&lock1);
 	tiber_cond_destroy(&wait1);
-
-	delete_tiber_runtime(tr);
 
 	printf("TEST COMPLETE\n");
 
