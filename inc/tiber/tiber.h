@@ -167,6 +167,7 @@ struct tiber
 	*/
 };
 
+// if the tiber_runtime* tr == NULL, then we will pick the runtime of the curr_tiber that is calling this function
 tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached);
 
 // user may never call this function
