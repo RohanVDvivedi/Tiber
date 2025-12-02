@@ -1,9 +1,4 @@
 * PICKED TASKS
-BUG 
- * tiber_result needs to be refactored to use spinlock to protect the result and the is_result_set
- * get_result waits on the respective pthread or fiber concurrency primitives and returns the result
- * set_result must be called from within the tiber itself, right after the trampoline wrapper returns
- * while killing make sure that result is produced first and only then make sure it is killed and has no reference counts pending on it, do this in join, detack and before calling delete_tiber
 
 * TIBER IO
   * implement tiber_epoll
