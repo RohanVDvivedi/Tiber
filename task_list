@@ -1,5 +1,10 @@
 * PICKED TASKS
 
+BUG
+ * look into get_tiber_result and set_tiber_result
+ * while setting tiber result you may have curr_tiber not actually running, make curr_tiber NULL immeditely you relase context lock
+ * get tiber result still looks fine
+
 * TIBER IO
   * implement tiber_epoll
     * that has an infinite loop function that does IO
