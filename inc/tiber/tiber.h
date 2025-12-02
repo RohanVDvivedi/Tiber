@@ -100,12 +100,17 @@ enum tiber_state
 typedef struct tiber_result tiber_result;
 struct tiber_result
 {
+	// for protecting is_result_set and the result
+	pthread_spinlock_t lock0;
+
 	int is_result_set;
 	void* result;
 
+	// for waking up, waiting pthreads
 	pthread_mutex_t lock1;
 	pthread_cond_t wait1;
 
+	// for waking up waiting tibers
 	tiber_mutex lock2;
 	tiber_cond wait2;
 };

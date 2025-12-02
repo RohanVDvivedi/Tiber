@@ -4,6 +4,8 @@ extern __thread tiber* curr_tiber;
 
 void initialize_tiber_result(tiber_result* tres)
 {
+	pthread_spin_init(&(tres->lock0));
+
 	tres->is_result_set = 0;
 	tres->result = NULL;
 
@@ -16,37 +18,54 @@ void initialize_tiber_result(tiber_result* tres)
 
 void set_tiber_result(tiber_result* tres, void* result)
 {
-	pthread_mutex_lock(&(tres->lock1));
-	tiber_mutex_lock(&(tres->lock2));
-
+	// set result with lock0 held
+	pthread_spin_lock(&(tres->lock0));
 	tres->is_result_set = 1;
 	tres->result = result;
+	pthread_spin_unlock(&(tres->lock0));
 
+	// wake up pthreads
+	pthread_mutex_lock(&(tres->lock1));
 	pthread_cond_broadcast(&(tres->wait1));
-	tiber_cond_broadcast(&(tres->wait2));
-
-	tiber_mutex_unlock(&(tres->lock2));
 	pthread_mutex_unlock(&(tres->lock1));
+
+	// wake up tibers
+	tiber_mutex_lock(&(tres->lock2));
+	tiber_cond_broadcast(&(tres->wait2));
+	tiber_mutex_unlock(&(tres->lock2));
+}
+
+static int _is_tiber_result_set(tiber_result* tres, void** result)
+{
+	int res = 0;
+
+	pthread_spin_lock(&(tres->lock0));
+	if(tres->is_result_set)
+	{
+		res = 1;
+		(*result) = tres->result;
+	}
+	pthread_spin_unlock(&(tres->lock0));
+
+	return res;
 }
 
 void* get_tiber_result(tiber_result* tres)
 {
 	void* result = NULL;
 
-	if(curr_tiber == NULL)
+	if(curr_tiber == NULL) // this is being called from a pthread
 	{
 		pthread_mutex_lock(&(tres->lock1));
-		while(!(tres->is_result_set))
+		while(!_is_tiber_result_set(tres, &result))
 			pthread_cond_wait(&(tres->wait1), &(tres->lock1));
-		result = tres->result;
 		pthread_mutex_unlock(&(tres->lock1));
 	}
-	else
+	else // this is being called from a tiber
 	{
 		tiber_mutex_lock(&(tres->lock2));
-		while(!(tres->is_result_set))
+		while(!_is_tiber_result_set(tres, &result))
 			tiber_cond_wait(&(tres->wait2), &(tres->lock2));
-		result = tres->result;
 		tiber_mutex_unlock(&(tres->lock2));
 	}
 
