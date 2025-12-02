@@ -4,7 +4,7 @@ extern __thread tiber* curr_tiber;
 
 void initialize_tiber_result(tiber_result* tres)
 {
-	pthread_spin_init(&(tres->lock0));
+	pthread_spin_init(&(tres->lock0), PTHREAD_PROCESS_PRIVATE);
 
 	tres->is_result_set = 0;
 	tres->result = NULL;

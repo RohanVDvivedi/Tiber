@@ -128,7 +128,6 @@ struct tiber
 	// the input function of the tiber that actually returns the value
 	void* input_p;
 	void* (*entry_func)(void* input_p);
-	void* return_value;
 
 	// the return from the entry_func gets set here after the tiber is killed
 	tiber_result result;

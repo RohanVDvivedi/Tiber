@@ -25,7 +25,6 @@ static void* tiber_job_func(void* tb_v)
 	// set the thread local
 	curr_tiber = (tiber*)tb_v;
 
-	int need_to_set_tiber_result = 0;
 	int need_to_delete_tiber = 0;
 
 	// we can transition a tiber in-to or out-of RUNNING state only while the context_lock is held
@@ -53,7 +52,6 @@ static void* tiber_job_func(void* tb_v)
 		pthread_spin_lock(&(curr_tiber->state_lock));
 		if(curr_tiber->state == TIBER_RUNNING)
 		{
-			need_to_set_tiber_result = 1; // we are killing it so we need to set its result
 			curr_tiber->state = TIBER_KILLED;
 			if(curr_tiber->is_detached)
 				need_to_delete_tiber = 1;	// if it was detached while we killed it, we need to delete it too
@@ -61,9 +59,6 @@ static void* tiber_job_func(void* tb_v)
 		pthread_spin_unlock(&(curr_tiber->state_lock));
 	}
 	pthread_spin_unlock(&(curr_tiber->context_lock));
-
-	if(need_to_set_tiber_result)
-		set_tiber_result(&(curr_tiber->result), curr_tiber->return_value);
 
 	// reset the thread local
 	curr_tiber = NULL;

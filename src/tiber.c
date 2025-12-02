@@ -126,10 +126,13 @@ void delete_tiber_runtime(tiber_runtime* tr)
 static void tiber_entry_wrapper()
 {
 	// run the tiber's entry_func
-	curr_tiber->return_value = curr_tiber->entry_func(curr_tiber->input_p);
+	void* result = curr_tiber->entry_func(curr_tiber->input_p);
 
-	// then kill it
-	tiber_exit();
+	// set the tiber's result, only then give back control
+	set_tiber_result(&(curr_tiber->result), result);
+
+	// then kill it, by swapping back to the pthread that is running us
+	switch_from_this_tiber_to_caller_thread();
 }
 
 // tiber functions
@@ -159,7 +162,6 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 
 	tb->input_p = input_p;
 	tb->entry_func = entry_func;
-	tb->return_value = NULL;
 	initialize_tiber_result(&(tb->result));
 
 	pthread_spin_init(&(tb->context_lock), PTHREAD_PROCESS_PRIVATE);
@@ -260,6 +262,9 @@ tiber* tiber_self(void)
 
 void tiber_exit(void)
 {
+	// before giving back control to the pthread that is calling us, set the result
+	set_tiber_result(&(curr_tiber->result), NULL);
+
 	// we switched from the tiber to the caller thread in running state so it will definitely kill us
 	switch_from_this_tiber_to_caller_thread();
 }
