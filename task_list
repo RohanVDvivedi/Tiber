@@ -32,3 +32,5 @@
     * epoll loop is simple waits for N events, once received, based on the event takes lock and wakes up corresponding waiters
     * the epoll loop maintains the hashmap of 256 redblack tree based buckets, pointing fd to their tiber_epoll_data
     * registering file descriptors and closing it will be worked on later
+
+    * make a stream out of tiber controlled file descriptors, we already have ssl and zlib streams built and fully functional, that can have an underlying blocking stream
