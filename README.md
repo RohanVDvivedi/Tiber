@@ -23,6 +23,7 @@ A C runtime allowing you to run fibers/coroutines, and allowing you to co-operat
  * add `-ltiber -lconnman -lboompar -lcutlery` linker flag, while compiling your application
  * do not forget to include appropriate public api headers as and when needed. this includes
    * `#include<tiber/tiber.h>`
+   * `#include<tiber/tiber_io.h>`
 
 ## Instructions for uninstalling library
 
