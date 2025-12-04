@@ -19,6 +19,12 @@ struct tiber_io
 
 	// fd -> tiber_io_wt
 	hashmap tiber_io_wts;
+
+	// runtime for the epoll loop
+	tiber_runtime* io_runtime;
+
+	// tiber that runs the epoll_loop
+	tiber* io_loop;
 };
 
 void initialize_tiber_io();
