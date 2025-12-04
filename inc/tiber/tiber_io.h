@@ -1,5 +1,5 @@
-#ifndef TIBER_NET_IO_H
-#define TIBER_NET_IO_H
+#ifndef TIBER_IO_H
+#define TIBER_IO_H
 
 #include<tiber/tiber.h>
 
@@ -8,8 +8,8 @@
 #include<sys/types.h>
 #include<sys/socket.h>
 
-typedef struct tiber_net_io tiber_net_io;
-struct tiber_net_io
+typedef struct tiber_io tiber_io;
+struct tiber_io
 {
 	// epoll file descriptor
 	int epoll_fd;
@@ -17,15 +17,15 @@ struct tiber_net_io
 	// protects tiber_net_io_fd and their reference_count
 	pthread_spinlock_t lock;
 
-	// fd -> tiber_net_io_fd
-	hashmap tiber_net_io_fds;
+	// fd -> tiber_io_wt
+	hashmap tiber_io_wts;
 };
 
-void initialize_tiber_net_io();
+void initialize_tiber_io();
 
-void deinitialize_tiber_net_io();
+void deinitialize_tiber_io();
 
-int register_fd_with_tiber_net_io(int fd);
+int register_fd_with_tiber_io(int fd);
 
 int tiber_accept(int socket, struct sockaddr* addr, socklen_t* addr_len);
 

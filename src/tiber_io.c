@@ -1,12 +1,12 @@
-#include<tiber/tiber_net_io.h>
+#include<tiber/tiber_io.h>
 
 #include<stdlib.h>
 #include<unistd.h>
 
-tiber_net_io tg_net = {};
+tiber_io global_tiber_io = {};
 
-typedef struct tiber_net_io_fd tiber_net_io_fd;
-struct tiber_net_io_fd
+typedef struct tiber_io_wt tiber_io_wt;
+struct tiber_io_wt
 {
 	int fd;
 
@@ -19,11 +19,11 @@ struct tiber_net_io_fd
 	tiber_cond read_and_write_wait;
 };
 
-void initialize_tiber_net_io();
+void initialize_tiber_io();
 
-void deinitialize_tiber_net_io();
+void deinitialize_tiber_io();
 
-int register_fd_with_tiber_net_io(int fd);
+int register_fd_with_tiber_io(int fd);
 
 int tiber_accept(int socket, struct sockaddr* addr, socklen_t* addr_len);
 
