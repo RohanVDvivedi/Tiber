@@ -130,7 +130,7 @@ int tiber_main()
 
 		register_fd_with_tiber_io(conn_fd);
 
-		new_tiber(NULL, serve, (void*)((intptr_t)conn_fd), 64*1024, 1);
+		new_tiber(NULL, serve, (void*)((intptr_t)conn_fd), 512*1024, 1);
 	}
 
 	tiber_close(listen_fd);
