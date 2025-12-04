@@ -7,6 +7,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
+#include<errno.h>
 
 int process(char* buffer)
 {
@@ -44,6 +45,7 @@ void* serve(void* fd_v)
 		buffreadlength = tiber_read(fd, buffer, 999);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
+			printf("read -> %d, %d\n", buffreadlength, errno);
 			break;
 		}
 
@@ -56,6 +58,7 @@ void* serve(void* fd_v)
 		buffsentlength = tiber_write(fd, buffer, buffreadlength);
 		if(buffsentlength == -1 || buffsentlength == 0)
 		{
+			printf("write -> %d, %d\n", buffsentlength, errno);
 			break;
 		}
 

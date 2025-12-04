@@ -38,7 +38,7 @@ void* make_1000_requests(void* _t)
 	int err = socket(AF_INET, SOCK_STREAM, 0);
     if(err == -1)
     {
-    	printf("error creating socket %d\n", errno);
+		printf("error creating socket\n");
     	exit(-1);
     }
     int fd = err;
@@ -83,7 +83,7 @@ void* make_1000_requests(void* _t)
 		int buffreadlength = tiber_read(fd, rbuffer, 999);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
-			printf("premature server connection closed for read\n");
+			printf("premature server connection closed for read -> %d\n", errno);
 			break;
 		}
 		rbuffer[buffreadlength] = '\0';
