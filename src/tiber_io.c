@@ -40,13 +40,34 @@ static int compare_tiber_io_wt(const void* wt1, const void* wt2)
 // increments reference count and returns the pointer to a tiber_io_wt
 static tiber_io_wt* fetch_reference_wt(int fd)
 {
-	// TODO:
+	pthread_spin_lock(&(global_tiber_io.lock));
+
+		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
+		if(wt != NULL)
+			wt->reference_count++;
+
+	pthread_spin_unlock(&(global_tiber_io.lock));
+
+	return wt;
 }
 
 // decrements reference count and discards it if the reference count reaches 0
 static void discard_reference_wt(tiber_io_wt* wt)
 {
-	// TODO:
+	pthread_spin_lock(&(global_tiber_io.lock));
+
+		wt->reference_count--;
+		if(wt->reference_count == 0)
+		{
+			remove_from_hashmap(&(global_tiber_io.tiber_io_wts), wt);
+			tiber_mutex_destroy(&(wt->lock));
+			tiber_cond_destroy(&(wt->read_wait));
+			tiber_cond_destroy(&(wt->write_wait));
+			tiber_cond_destroy(&(wt->read_and_write_wait));
+			free(wt);
+		}
+
+	pthread_spin_unlock(&(global_tiber_io.lock));
 }
 
 static void* tiber_io_epoll_loop(void* _t)
