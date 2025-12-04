@@ -54,6 +54,8 @@ static tiber_io_wt* fetch_reference_wt(int fd)
 // decrements reference count and discards it if the reference count reaches 0
 static void discard_reference_wt(tiber_io_wt* wt)
 {
+	int deleted = 0;
+
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		wt->reference_count--;
@@ -65,13 +67,19 @@ static void discard_reference_wt(tiber_io_wt* wt)
 			tiber_cond_destroy(&(wt->write_wait));
 			tiber_cond_destroy(&(wt->read_and_write_wait));
 			free(wt);
+			deleted = 1;
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
+
+	if(deleted)
+		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 }
 
 static void discard_reference_wt2(int fd)
 {
+	int deleted = 0;
+
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
@@ -84,9 +92,13 @@ static void discard_reference_wt2(int fd)
 			tiber_cond_destroy(&(wt->write_wait));
 			tiber_cond_destroy(&(wt->read_and_write_wait));
 			free(wt);
+			deleted = 1;
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
+
+	if(deleted)
+		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 }
 
 static void* tiber_io_epoll_loop(void* _t)
@@ -330,4 +342,9 @@ ssize_t tiber_write(int fd, const void* buf, size_t count)
 	}
 }
 
-int tiber_close(int fd);
+int tiber_close(int fd)
+{
+	discard_reference_wt2(fd);
+
+	return close(fd);
+}
