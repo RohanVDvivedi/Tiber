@@ -45,7 +45,7 @@ void* serve(void* fd_v)
 		buffreadlength = tiber_read(fd, buffer, 999);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
-			printf("read -> %d, %d\n", buffreadlength, errno);
+			printf("read -> %d\n", buffreadlength);
 			break;
 		}
 
@@ -58,7 +58,7 @@ void* serve(void* fd_v)
 		buffsentlength = tiber_write(fd, buffer, buffreadlength);
 		if(buffsentlength == -1 || buffsentlength == 0)
 		{
-			printf("write -> %d, %d\n", buffsentlength, errno);
+			printf("write -> %d\n", buffsentlength);
 			break;
 		}
 
