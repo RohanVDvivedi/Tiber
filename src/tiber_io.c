@@ -65,7 +65,23 @@ void initialize_tiber_io()
 	global_tiber_io.io_loop = new_tiber(global_tiber_io.io_runtime, tiber_io_epoll_loop, NULL, 1024 * 1024, 0);
 }
 
-void deinitialize_tiber_io();
+void deinitialize_tiber_io()
+{
+	// close epoll_fd
+	close(global_tiber_io.epoll_fd);
+
+	// wait for tiber to finish
+	void* result;
+	tiber_join(global_tiber_io.io_loop, &result);
+
+	// delete the tiber runtime
+	delete_tiber_runtime(global_tiber_io.io_runtime);
+
+	// destroy all elements of the hashmap tiber_io_wts
+	// TODO:
+
+	pthread_spin_destroy(&(global_tiber_io.lock));
+}
 
 int register_fd_with_tiber_io(int fd);
 
