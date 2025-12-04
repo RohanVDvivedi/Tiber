@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<errno.h>
+#include<fcntl.h>
 
 #include<sys/epoll.h>
 
@@ -37,6 +38,30 @@ static int compare_tiber_io_wt(const void* wt1, const void* wt2)
 	return compare_numbers(((const tiber_io_wt*)wt1)->fd, ((const tiber_io_wt*)wt2)->fd);
 }
 
+static tiber_io_wt* create_wt(int fd)
+{
+	tiber_io_wt* wt = NULL;
+
+	pthread_spin_lock(&(global_tiber_io.lock));
+
+		if(NULL == find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd})))
+		{
+			wt = malloc(sizeof(tiber_io_wt));
+			wt->fd = fd;
+			wt->reference_count = 1; // one if it's reference is in the epoll events
+			tiber_mutex_init(&(wt->lock));
+			tiber_cond_init(&(wt->read_wait));
+			tiber_cond_init(&(wt->write_wait));
+			tiber_cond_init(&(wt->read_and_write_wait));
+			initialize_bstnode(&(wt->embed_node_for_tiber_io_wts));
+			insert_in_hashmap(&(global_tiber_io.tiber_io_wts), wt);
+		}
+
+	pthread_spin_unlock(&(global_tiber_io.lock));
+
+	return wt;
+}
+
 // increments reference count and returns the pointer to a tiber_io_wt
 static tiber_io_wt* fetch_reference_wt(int fd)
 {
@@ -54,8 +79,6 @@ static tiber_io_wt* fetch_reference_wt(int fd)
 // decrements reference count and discards it if the reference count reaches 0
 static void discard_reference_wt(tiber_io_wt* wt)
 {
-	int deleted = 0;
-
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		wt->reference_count--;
@@ -67,19 +90,13 @@ static void discard_reference_wt(tiber_io_wt* wt)
 			tiber_cond_destroy(&(wt->write_wait));
 			tiber_cond_destroy(&(wt->read_and_write_wait));
 			free(wt);
-			deleted = 1;
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
-
-	if(deleted)
-		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 }
 
 static void discard_reference_wt2(int fd)
 {
-	int deleted = 0;
-
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
@@ -92,13 +109,9 @@ static void discard_reference_wt2(int fd)
 			tiber_cond_destroy(&(wt->write_wait));
 			tiber_cond_destroy(&(wt->read_and_write_wait));
 			free(wt);
-			deleted = 1;
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
-
-	if(deleted)
-		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 }
 
 static void* tiber_io_epoll_loop(void* _t)
@@ -176,7 +189,40 @@ void deinitialize_tiber_io()
 	pthread_spin_destroy(&(global_tiber_io.lock));
 }
 
-int register_fd_with_tiber_io(int fd);
+int register_fd_with_tiber_io(int fd)
+{
+	// make the file descriptor non-blocking
+	{
+		int flags = fcntl(fd, F_GETFL, 0);
+		if(flags == -1)
+		{
+			printf("TIBER BUG: not able to get flags for the file descriptor\n");
+			exit(-1);
+		}
+
+		flags |= O_NONBLOCK;
+
+		if(fcntl(fd, F_SETFL, flags) == -1)
+		{
+			printf("TIBER BUG: not able to make the file descriptor non-blocking\n");
+			exit(-1);
+		}
+	}
+
+	// try to create a new registeration of the wt for this fd
+	tiber_io_wt* wt = create_wt(fd);
+
+	// if successfull send it to epoll
+	if(wt != NULL)
+	{
+		struct epoll_event event;
+		event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET;
+		event.data.ptr = wt;
+		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_ADD, fd, &event);;
+	}
+
+	return (wt != NULL);
+}
 
 int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len)
 {
@@ -344,6 +390,10 @@ ssize_t tiber_write(int fd, const void* buf, size_t count)
 
 int tiber_close(int fd)
 {
+	// stop all events comming from the epoll for this fd
+	epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+
+	// then discard the reference count held by the internals if epoll
 	discard_reference_wt2(fd);
 
 	return close(fd);
