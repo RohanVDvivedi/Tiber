@@ -36,6 +36,18 @@ static int compare_tiber_io_wt(const void* wt1, const void* wt2)
 	return compare_numbers(((const tiber_io_wt*)wt1)->fd, ((const tiber_io_wt*)wt2)->fd);
 }
 
+// increments reference count and returns the pointer to a tiber_io_wt
+static tiber_io_wt* fetch_reference_wt(int fd)
+{
+	// TODO:
+}
+
+// decrements reference count and discards it if the reference count reaches 0
+static void discard_reference_wt(tiber_io_wt* wt)
+{
+	// TODO:
+}
+
 static void* tiber_io_epoll_loop(void* _t)
 {
 	while(1)
