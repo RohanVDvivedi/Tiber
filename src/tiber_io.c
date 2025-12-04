@@ -38,6 +38,34 @@ static int compare_tiber_io_wt(const void* wt1, const void* wt2)
 
 static void* tiber_io_epoll_loop(void* _t)
 {
+	while(1)
+	{
+		#define MAX_EVENTS 1024
+		struct epoll_event events[MAX_EVENTS];
+
+		int events_count = epoll_wait(global_tiber_io.epoll_fd, events, MAX_EVENTS, 1000); // timeout is 1 second
+		if(events_count == -1)
+			break;
+
+		for(int i = 0; i < events_count; i++)
+		{
+			tiber_io_wt* wt = events[i].data.ptr;
+
+			tiber_mutex_lock(&(wt->lock));
+
+			if(events[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))
+				tiber_cond_broadcast(&(wt->read_wait));
+
+			if(events[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))
+				tiber_cond_broadcast(&(wt->write_wait));
+
+			if(events[i].events & (EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP))
+				tiber_cond_broadcast(&(wt->read_and_write_wait));
+
+			tiber_mutex_unlock(&(wt->lock));
+		}
+	}
+
 	return NULL;
 }
 
