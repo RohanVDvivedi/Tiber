@@ -3,7 +3,10 @@
 
 #include<tiber/tiber.h>
 
-#include<cutlery/hashmap.p>
+#include<cutlery/hashmap.h>
+
+#include<sys/types.h>
+#include<sys/socket.h>
 
 typedef struct tiber_net_io tiber_net_io;
 struct tiber_net_io
