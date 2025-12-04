@@ -74,7 +74,10 @@ int tiber_main()
 	// file descriptor to socket
 	int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(listen_fd == -1)
+	{
+		printf("error creating socket\n");
 		return -1;
+	}
 
 	// set socket options so that it allows you to reuse the address and port right after using it once
 	setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
@@ -89,6 +92,7 @@ int tiber_main()
 	int err = bind(listen_fd, ((const struct sockaddr *)(&addr)), sizeof(addr));
 	if(err)
 	{
+		printf("error binding\n");
 		close(listen_fd);
 		return -1;
 	}
@@ -97,7 +101,10 @@ int tiber_main()
 	// listenning on the socket file discriptor 
 	err = listen(listen_fd, 10);
 	if(err == -1)
+	{
+		printf("error listening\n");
 		return err;
+	}
 
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
@@ -111,6 +118,7 @@ int tiber_main()
 		err = tiber_accept(listen_fd, (struct sockaddr*)&client_addr, &client_len);
 		if(err == -1)
 		{
+			printf("error accepting\n");
 			// break the listenning loop, if the listen_fd file discriptor is closed
 			if(errno == EBADF || errno == ECONNABORTED || errno == EINVAL || errno == ENOTSOCK || errno == EPERM)
 				break;
