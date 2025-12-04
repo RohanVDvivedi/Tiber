@@ -283,23 +283,14 @@ int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len)
 
 int tiber_connect(int sockfd, const struct sockaddr* addr, socklen_t addr_len)
 {
-	while(1)
 	{
-		int res = connect(sockfd, addr, addr_len);
-		if(res != -1) // if success, return right away
-			return res;
-
-		// we can only handle these errors non blockingly
-		if(errno != EINPROGRESS)
-			return res;
-
 		tiber_io_wt* wt = fetch_reference_wt(sockfd);
 		if(wt == NULL) // if a wait handle could not found, return right away
 			return -1;
 
 		tiber_mutex_lock(&(wt->lock));
 
-		res = connect(sockfd, addr, addr_len);
+		int res = connect(sockfd, addr, addr_len);
 		if(res != -1) // if success, return right away
 		{
 			tiber_mutex_unlock(&(wt->lock));
@@ -315,10 +306,27 @@ int tiber_connect(int sockfd, const struct sockaddr* addr, socklen_t addr_len)
 			return res;
 		}
 
-		tiber_cond_wait(&(wt->read_and_write_wait), &(wt->lock));
+		tiber_cond_wait(&(wt->write_wait), &(wt->lock));
 
 		tiber_mutex_unlock(&(wt->lock));
 		discard_reference_wt(wt);
+	}
+
+	// after wakeup, check if the connection has been established
+	{
+		int err = 0;
+		socklen_t len = sizeof(err);
+
+		// Mandatory: test the connection result
+		if(getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len) < 0)
+			return -1;  // getsockopt failed (rare)
+
+		if(err == 0)
+			return 0; // SUCCESS: the connection is established
+
+		// FAIL: asynchronous connect failed
+		errno = err;
+		return -1;
 	}
 }
 
