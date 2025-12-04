@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
+#include<errno.h>
 
 #include<sys/epoll.h>
 
@@ -130,8 +131,34 @@ int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len)
 	while(1)
 	{
 		int res = accept(sockfd, addr, addr_len);
-		if(res != -1)
+		if(res != -1) // if success, return right away
 			return res;
+
+		// we can only handle these errors non blockingly
+		if(errno != EAGAIN && errno != EWOULDBLOCK)
+			return res;
+
+		tiber_io_wt* wt = fetch_reference_wt(sockfd);
+		if(wt == NULL) // if a wait handle could not found, return right away
+			return -1;
+
+		tiber_mutex_lock(&(wt->lock));
+
+		res = accept(sockfd, addr, addr_len);
+		if(res != -1) // if success, return right away
+		{
+			tiber_mutex_unlock(&(wt->lock));
+			discard_reference_wt(wt);
+			return res;
+		}
+
+		// block only if it is still EAGAIN or EWOULDBLOCK
+		if(errno == EAGAIN || errno == EWOULDBLOCK)
+			tiber_cond_wait(&(wt->read_and_write_wait), &(wt->lock));
+
+		tiber_mutex_unlock(&(wt->lock));
+
+		discard_reference_wt(wt);
 	}
 }
 
