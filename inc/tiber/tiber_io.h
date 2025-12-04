@@ -27,7 +27,7 @@ void deinitialize_tiber_io();
 
 int register_fd_with_tiber_io(int fd);
 
-int tiber_accept(int socket, struct sockaddr* addr, socklen_t* addr_len);
+int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len);
 
 int tiber_connect(int sockfd, const struct sockaddr* addr, socklen_t addr_len);
 

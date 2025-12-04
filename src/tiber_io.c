@@ -25,12 +25,44 @@ void deinitialize_tiber_io();
 
 int register_fd_with_tiber_io(int fd);
 
-int tiber_accept(int socket, struct sockaddr* addr, socklen_t* addr_len);
+int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len)
+{
+	while(1)
+	{
+		int res = accept(sockfd, addr, addr_len);
+		if(res != -1)
+			return res;
+	}
+}
 
-int tiber_connect(int sockfd, const struct sockaddr* addr, socklen_t addr_len);
+int tiber_connect(int sockfd, const struct sockaddr* addr, socklen_t addr_len)
+{
+	while(1)
+	{
+		int res = connect(sockfd, addr, addr_len);
+		if(res != -1)
+			return res;
+	}
+}
 
-ssize_t tiber_read(int fd, void* buf, size_t count);
+ssize_t tiber_read(int fd, void* buf, size_t count)
+{
+	while(1)
+	{
+		ssize_t res = read(fd, buf, count);
+		if(res != -1)
+			return res;
+	}
+}
 
-ssize_t tiber_write(int fd, const void* buf, size_t count);
+ssize_t tiber_write(int fd, const void* buf, size_t count)
+{
+	while(1)
+	{
+		ssize_t res = write(fd, buf, count);
+		if(res != -1)
+			return res;
+	}
+}
 
 int tiber_close(int fd);
