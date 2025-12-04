@@ -8,6 +8,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
+#include<errno.h>
 
 int process(char* buffer)
 {
@@ -37,7 +38,7 @@ void* make_1000_requests(void* _t)
 	int err = socket(AF_INET, SOCK_STREAM, 0);
     if(err == -1)
     {
-    	printf("error creating socket\n");
+    	printf("error creating socket %d\n", errno);
     	exit(-1);
     }
     int fd = err;
@@ -77,7 +78,7 @@ void* make_1000_requests(void* _t)
 		}
 		wbuffer[buffsentlength] = '\0';
 
-		usleep(10000);
+		tiber_msleep(10);
 
 		int buffreadlength = tiber_read(fd, rbuffer, 999);
 		if(buffreadlength == -1 || buffreadlength == 0)
@@ -93,7 +94,7 @@ void* make_1000_requests(void* _t)
 			exit(-1);
 		}
 
-		usleep(10000);
+		tiber_msleep(10);
 	}
 
 	tiber_close(fd);
