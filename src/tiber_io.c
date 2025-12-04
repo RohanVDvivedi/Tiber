@@ -19,6 +19,16 @@ struct tiber_io_wt
 	tiber_cond read_and_write_wait;
 };
 
+static cy_uint hash_tiber_io_wt(const void* wt)
+{
+	return hash_randomizer(((const tiber_io_wt*)wt)->fd);
+}
+
+static cy_uint compare_tiber_io_wt(const void* wt1, const void* wt2)
+{
+	return compare_numbers(((const tiber_io_wt*)wt1)->fd, ((const tiber_io_wt*)wt2)->fd);
+}
+
 void initialize_tiber_io();
 
 void deinitialize_tiber_io();
