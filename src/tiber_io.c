@@ -47,6 +47,11 @@ static tiber_io_wt* create_wt(int fd)
 		if(NULL == find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd})))
 		{
 			wt = malloc(sizeof(tiber_io_wt));
+			if(wt == NULL)
+			{
+				printf("TIBER BUG: failed to allocate memory for tiber_io_wt\n");
+				exit(-1);
+			}
 			wt->fd = fd;
 			wt->reference_count = 1; // one if it's reference is in the epoll events
 			tiber_mutex_init(&(wt->lock));
@@ -171,6 +176,16 @@ void initialize_tiber_io()
 	global_tiber_io.io_loop = new_tiber(global_tiber_io.io_runtime, tiber_io_epoll_loop, NULL, 1024 * 1024, 0);
 }
 
+static void delete_all_from_tiber_io_wts(void* resource_p, const void* data_p)
+{
+	tiber_io_wt* wt = (tiber_io_wt*) data_p;
+	tiber_mutex_destroy(&(wt->lock));
+	tiber_cond_destroy(&(wt->read_wait));
+	tiber_cond_destroy(&(wt->write_wait));
+	tiber_cond_destroy(&(wt->read_and_write_wait));
+	free(wt);
+}
+
 void deinitialize_tiber_io()
 {
 	// close epoll_fd
@@ -184,7 +199,8 @@ void deinitialize_tiber_io()
 	delete_tiber_runtime(global_tiber_io.io_runtime);
 
 	// destroy all elements of the hashmap tiber_io_wts
-	// TODO:
+	remove_all_from_hashmap(&(global_tiber_io.tiber_io_wts), &((const notifier_interface){NULL, delete_all_from_tiber_io_wts}));
+	deinitialize_hashmap(&(global_tiber_io.tiber_io_wts));
 
 	pthread_spin_destroy(&(global_tiber_io.lock));
 }
