@@ -1,4 +1,5 @@
 #include<tiber/tiber.h>
+#include<tiber/tiber_io.h>
 
 #include<unistd.h>
 
@@ -30,6 +31,8 @@ int main(int argc, char** argv)
 	global_argc = argc;
 	global_argv = argv;
 
+	initialize_tiber_io();
+
 	// create runtime for 8 threads each with 3 MB of stack space
 	tiber_runtime* tr = new_tiber_runtime(sysconf(_SC_NPROCESSORS_ONLN), 3 * 1024 * 1024);
 
@@ -39,6 +42,8 @@ int main(int argc, char** argv)
 	tiber_join(tb, &result);
 
 	delete_tiber_runtime(tr);
+
+	deinitialize_tiber_io();
 
 	return global_return;
 }
