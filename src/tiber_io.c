@@ -70,6 +70,25 @@ static void discard_reference_wt(tiber_io_wt* wt)
 	pthread_spin_unlock(&(global_tiber_io.lock));
 }
 
+static void discard_reference_wt2(int fd)
+{
+	pthread_spin_lock(&(global_tiber_io.lock));
+
+		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
+		wt->reference_count--;
+		if(wt->reference_count == 0)
+		{
+			remove_from_hashmap(&(global_tiber_io.tiber_io_wts), wt);
+			tiber_mutex_destroy(&(wt->lock));
+			tiber_cond_destroy(&(wt->read_wait));
+			tiber_cond_destroy(&(wt->write_wait));
+			tiber_cond_destroy(&(wt->read_and_write_wait));
+			free(wt);
+		}
+
+	pthread_spin_unlock(&(global_tiber_io.lock));
+}
+
 static void* tiber_io_epoll_loop(void* _t)
 {
 	while(1)
