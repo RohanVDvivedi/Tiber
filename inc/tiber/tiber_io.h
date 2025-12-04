@@ -20,15 +20,17 @@ struct tiber_io
 	// fd -> tiber_io_wt
 	hashmap tiber_io_wts;
 
-	// runtime for the epoll loop
+	// runtime for the epoll loop, it will only have 1 pthread, for running the epoll loop thats all
 	tiber_runtime* io_runtime;
 
 	// tiber that runs the epoll_loop
 	tiber* io_loop;
 };
 
+// this should be the first function in your application, the first line in you main function
 void initialize_tiber_io();
 
+// this should be the last line in your main function, right before you return
 void deinitialize_tiber_io();
 
 int register_fd_with_tiber_io(int fd);
