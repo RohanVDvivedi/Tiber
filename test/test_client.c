@@ -87,6 +87,11 @@ void* make_1000_requests(void* _t)
 			break;
 		}
 		rbuffer[buffreadlength] = '\0';
+		if(buffreadlength != 30)
+		{
+			printf("read %d bytes read instead of 30\n", buffreadlength);
+			exit(-1);
+		}
 
 		if(0 != strcmp(rbuffer, wbuffer))
 		{

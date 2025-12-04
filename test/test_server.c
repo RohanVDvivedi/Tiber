@@ -48,6 +48,11 @@ void* serve(void* fd_v)
 			printf("read -> %d\n", buffreadlength);
 			break;
 		}
+		if(buffreadlength != 30)
+		{
+			printf("read %d bytes read instead of 30\n", buffreadlength);
+			exit(-1);
+		}
 
 		buffer[buffreadlength] = '\0';
 
