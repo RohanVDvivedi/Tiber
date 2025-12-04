@@ -1,7 +1,6 @@
 * PICKED TASKS
 
 * TIBER IO
-    * test make a server spawning a new tiber for as many requests as possible and a client sending 2000 concurrent connections, sending 100 commands of random string and checks if it echoed properly
-    * handlers for the servers and clients will be detached, and will wait for a ctrl+c
+  * bug fix
 
   * make a stream out of tiber controlled file descriptors, we already have ssl and zlib streams built and fully functional, that can have an underlying blocking stream
