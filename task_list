@@ -1,6 +1,5 @@
 * PICKED TASKS
 
 * TIBER IO
-  * bug fix
 
   * make a stream out of tiber controlled file descriptors, we already have ssl and zlib streams built and fully functional, that can have an underlying blocking stream
