@@ -79,10 +79,13 @@ static tiber_io_wt* fetch_reference_wt(int fd)
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
-		if(wt->marked_for_deletion) // do not fetch the wt reference, if it is already marked for deletion
-			wt = NULL;
 		if(wt != NULL)
-			wt->reference_count++;
+		{
+			if(wt->marked_for_deletion) // do not fetch the wt reference, if it is already marked for deletion
+				wt = NULL;
+			else // else increment it's reference_count
+				wt->reference_count++;
+		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
 
@@ -113,8 +116,8 @@ static void mark_for_deletion_wt(int fd)
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
-		if(!(wt->marked_for_deletion))
-		{ // if not yet marked for deletion, do it and delete it if reference_count is already 0
+		if(wt != NULL && (!(wt->marked_for_deletion)))
+		{ // if not yet marked for deletion, do it and delete it, if reference_count is already 0
 			wt->marked_for_deletion = 1;
 			if(wt->reference_count == 0)
 			{
