@@ -438,18 +438,18 @@ int tiber_close(int fd)
 	// after close, wake up all the waiters
 	{
 		tiber_io_wt* wt = fetch_reference_wt(fd);
-		if(wt == NULL)
-			continue;
+		if(wt != NULL)
+		{
+			tiber_mutex_lock(&(wt->lock));
 
-		tiber_mutex_lock(&(wt->lock));
+			tiber_cond_broadcast(&(wt->read_wait));
+			tiber_cond_broadcast(&(wt->write_wait));
+			tiber_cond_broadcast(&(wt->read_and_write_wait));
 
-		tiber_cond_broadcast(&(wt->read_wait));
-		tiber_cond_broadcast(&(wt->write_wait));
-		tiber_cond_broadcast(&(wt->read_and_write_wait));
+			tiber_mutex_unlock(&(wt->lock));
 
-		tiber_mutex_unlock(&(wt->lock));
-
-		discard_reference_wt(wt);
+			discard_reference_wt(wt);
+		}
 	}
 
 	// stop all events comming from the epoll for this fd
