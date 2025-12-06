@@ -90,8 +90,6 @@ void* make_1000_requests(void* _t)
 		}
 		wbuffer[buffsentlength] = '\0';
 
-		tiber_msleep(10);
-
 		int buffreadlength = tiber_read_full(fd, rbuffer, 30);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
@@ -110,8 +108,6 @@ void* make_1000_requests(void* _t)
 			printf("response of %s was %s\n", wbuffer, rbuffer);
 			exit(-1);
 		}
-
-		tiber_msleep(10);
 	}
 
 	tiber_close(fd);
