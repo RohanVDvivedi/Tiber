@@ -243,10 +243,10 @@ int register_fd_with_tiber_io(int fd)
 	}
 
 	// try to create a new registeration of the wt for this fd
-	tiber_io_wt* wt = create_wt(fd);
+	if(!create_wt(fd))
+		return 0;
 
-	// if successfull send it to epoll
-	if(wt != NULL)
+	// if successfull send it to epoll, to be monitored
 	{
 		struct epoll_event event;
 		event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET;
