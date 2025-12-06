@@ -72,6 +72,11 @@ void* serve(void* fd_v)
 			printf("write -> %d\n", buffsentlength);
 			break;
 		}
+		if(buffsentlength != 30)
+		{
+			printf("sent %d bytes read instead of 30\n", buffsentlength);
+			exit(-1);
+		}
 	}
 
 	tiber_close(fd);

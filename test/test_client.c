@@ -83,6 +83,11 @@ void* make_1000_requests(void* _t)
 			printf("premature server connection closed for write, %d, @ %d\n", buffsentlength, i);
 			break;
 		}
+		if(buffsentlength != 30)
+		{
+			printf("sent %d bytes read instead of 30\n", buffsentlength);
+			exit(-1);
+		}
 		wbuffer[buffsentlength] = '\0';
 
 		tiber_msleep(10);
