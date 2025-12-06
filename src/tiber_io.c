@@ -143,7 +143,11 @@ static void* tiber_io_epoll_loop(void* _t)
 
 		for(int i = 0; i < events_count; i++)
 		{
-			tiber_io_wt* wt = events[i].data.ptr;
+			int fd = events[i].data.fd;
+
+			tiber_io_wt* wt = fetch_reference_wt(fd);
+			if(wt == NULL)
+				continue;
 
 			tiber_mutex_lock(&(wt->lock));
 
@@ -157,6 +161,8 @@ static void* tiber_io_epoll_loop(void* _t)
 				tiber_cond_broadcast(&(wt->read_and_write_wait));
 
 			tiber_mutex_unlock(&(wt->lock));
+
+			discard_reference_wt(wt);
 		}
 	}
 
