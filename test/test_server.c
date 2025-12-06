@@ -113,7 +113,7 @@ int tiber_main()
 
 	// phase 3
 	// listenning on the socket file discriptor 
-	err = listen(listen_fd, 10);
+	err = listen(listen_fd, 1000);
 	if(err == -1)
 	{
 		printf("error listening\n");
