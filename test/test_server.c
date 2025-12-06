@@ -9,25 +9,32 @@
 #include<unistd.h>
 #include<errno.h>
 
-int process(char* buffer)
+ssize_t tiber_read_full(int fd, void* buf, size_t count)
 {
-	printf("received : %s length %lu\n", buffer, strlen(buffer));
+	ssize_t total_bytes_read = 0;
+	while(total_bytes_read < count)
+	{
+		ssize_t bytes_read = tiber_read(fd, buf + total_bytes_read, count - total_bytes_read);
+		if(bytes_read == -1)
+			return -1;
+		if(bytes_read == 0)
+			return total_bytes_read;
+		total_bytes_read += bytes_read;
+	}
+	return total_bytes_read;
+}
 
-	if(strcmp(buffer, "exit\r\n") == 0 || strcmp(buffer, "exit\n") == 0 || strcmp(buffer, "exit") == 0)
+ssize_t tiber_write_full(int fd, const void* buf, size_t count)
+{
+	ssize_t total_bytes_written = 0;
+	while(total_bytes_written < count)
 	{
-		strcpy(buffer, "xit\r\n");
-		return -1;
+		ssize_t bytes_written = tiber_write(fd, buf + total_bytes_written, count - total_bytes_written);
+		if(bytes_written == -1)
+			return -1;
+		total_bytes_written += bytes_written;
 	}
-	else if(strcmp(buffer, "ping\r\n") == 0 || strcmp(buffer, "ping\n") == 0 || strcmp(buffer, "ping") == 0)
-	{
-		strcpy(buffer, "pong\r\n");
-	}
-	else if(strcmp(buffer, "pong\r\n") == 0 || strcmp(buffer, "pong\n") == 0 || strcmp(buffer, "pong") == 0)
-	{
-		strcpy(buffer, "ping\r\n");
-	}
-
-	return 0;
+	return total_bytes_written;
 }
 
 void* serve(void* fd_v)
@@ -42,7 +49,7 @@ void* serve(void* fd_v)
 
 	while(1)
 	{
-		buffreadlength = tiber_read(fd, buffer, 999);
+		buffreadlength = tiber_read_full(fd, buffer, 30);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
 			printf("read -> %d\n", buffreadlength);
@@ -53,22 +60,16 @@ void* serve(void* fd_v)
 			printf("read %d bytes read instead of 30\n", buffreadlength);
 			exit(-1);
 		}
-
 		buffer[buffreadlength] = '\0';
 
 		// process the buffer here
-		int process_result = process(buffer);
+		printf("received : %s length %lu\n", buffer, strlen(buffer));
 
 		buffreadlength = strlen(buffer);
-		buffsentlength = tiber_write(fd, buffer, buffreadlength);
+		buffsentlength = tiber_write_full(fd, buffer, buffreadlength);
 		if(buffsentlength == -1 || buffsentlength == 0)
 		{
 			printf("write -> %d\n", buffsentlength);
-			break;
-		}
-
-		if(process_result != 0)
-		{
 			break;
 		}
 	}
