@@ -62,9 +62,6 @@ void* serve(void* fd_v)
 		}
 		buffer[buffreadlength] = '\0';
 
-		// process the buffer here
-		printf("received : %s length %lu\n", buffer, strlen(buffer));
-
 		buffreadlength = strlen(buffer);
 		buffsentlength = tiber_write_full(fd, buffer, buffreadlength);
 		if(buffsentlength == -1 || buffsentlength == 0)
