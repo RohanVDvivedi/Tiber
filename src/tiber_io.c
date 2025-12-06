@@ -437,11 +437,6 @@ int tiber_close(int fd)
 	// stop all events comming from the epoll for this fd
 	epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
-	// close the file descriptor
-	int result = close(fd);
-	if(result == -1)
-		return result;
-
 	// there could still be some waiters, so wake them all up
 	{
 		tiber_io_wt* wt = fetch_reference_wt(fd);
@@ -462,5 +457,6 @@ int tiber_close(int fd)
 	// then mark the wt for the fd to be deleted
 	mark_for_deletion_wt(fd);
 
-	return result;
+	// we do this last so that another open call may not allocate this very same file descriptor
+	return close(fd);
 }
