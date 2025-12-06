@@ -80,7 +80,7 @@ void* make_1000_requests(void* _t)
 		int buffsentlength = tiber_write_full(fd, wbuffer, strlen(wbuffer));
 		if(buffsentlength == -1 || buffsentlength == 0)
 		{
-			printf("premature server connection closed for write, %d\n", buffsentlength);
+			printf("premature server connection closed for write, %d, @ %d\n", buffsentlength, i);
 			break;
 		}
 		wbuffer[buffsentlength] = '\0';
@@ -90,7 +90,7 @@ void* make_1000_requests(void* _t)
 		int buffreadlength = tiber_read_full(fd, rbuffer, 30);
 		if(buffreadlength == -1 || buffreadlength == 0)
 		{
-			printf("premature server connection closed for read, %d, %d\n", buffreadlength, errno);
+			printf("premature server connection closed for read, %d @ %d\n", buffreadlength, i);
 			break;
 		}
 		rbuffer[buffreadlength] = '\0';
