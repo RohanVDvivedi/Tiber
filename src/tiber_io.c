@@ -254,7 +254,7 @@ int register_fd_with_tiber_io(int fd)
 		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_ADD, fd, &event);;
 	}
 
-	return (wt != NULL);
+	return 1;
 }
 
 int tiber_accept(int sockfd, struct sockaddr* addr, socklen_t* addr_len)
@@ -456,7 +456,7 @@ int tiber_close(int fd)
 	epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
 	// then mark the wt for the fd to be deleted
-	marked_for_deletion(fd);
+	mark_for_deletion_wt(fd);
 
 	return result;
 }
