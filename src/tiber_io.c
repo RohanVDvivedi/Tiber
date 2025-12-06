@@ -434,11 +434,15 @@ ssize_t tiber_write(int fd, const void* buf, size_t count)
 
 int tiber_close(int fd)
 {
+	// stop all events comming from the epoll for this fd
+	epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+
+	// close the file descriptor
 	int result = close(fd);
 	if(result == -1)
 		return result;
 
-	// after close, wake up all the waiters
+	// there could still be some waiters, so wake them all up
 	{
 		tiber_io_wt* wt = fetch_reference_wt(fd);
 		if(wt != NULL)
@@ -454,9 +458,6 @@ int tiber_close(int fd)
 			discard_reference_wt(wt);
 		}
 	}
-
-	// stop all events comming from the epoll for this fd
-	epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
 	// then mark the wt for the fd to be deleted
 	mark_for_deletion_wt(fd);
