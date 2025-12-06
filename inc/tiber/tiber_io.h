@@ -14,7 +14,7 @@ struct tiber_io
 	// epoll file descriptor
 	int epoll_fd;
 
-	// protects tiber_net_io_fd and their reference_count
+	// protects tiber_net_io_fd and their reference_count counter and marked_for_deletion flags
 	pthread_spinlock_t lock;
 
 	// fd -> tiber_io_wt

@@ -17,7 +17,11 @@ struct tiber_io_wt
 {
 	int fd;
 
+	// reference_count has to be incremented every time you hold a pointer to this struct
 	uint64_t reference_count;
+
+	// if this flag is set, the reference_count increments will always fail and the tiber_io_wt will be deleted after the reference_count reaches 0
+	int marked_for_deletion;
 
 	tiber_mutex lock;
 
@@ -38,33 +42,35 @@ static int compare_tiber_io_wt(const void* wt1, const void* wt2)
 	return compare_numbers(((const tiber_io_wt*)wt1)->fd, ((const tiber_io_wt*)wt2)->fd);
 }
 
-static tiber_io_wt* create_wt(int fd)
+static int create_wt(int fd)
 {
-	tiber_io_wt* wt = NULL;
+	int result = 0;
 
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		if(NULL == find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd})))
 		{
-			wt = malloc(sizeof(tiber_io_wt));
+			tiber_io_wt* wt = malloc(sizeof(tiber_io_wt));
 			if(wt == NULL)
 			{
 				printf("TIBER BUG: failed to allocate memory for tiber_io_wt\n");
 				exit(-1);
 			}
 			wt->fd = fd;
-			wt->reference_count = 1; // one if it's reference is in the epoll events
+			wt->reference_count = 0; // noone is referencing it initially
+			wt->marked_for_deletion = 0; // not yet marked for deletion
 			tiber_mutex_init(&(wt->lock));
 			tiber_cond_init(&(wt->read_wait));
 			tiber_cond_init(&(wt->write_wait));
 			tiber_cond_init(&(wt->read_and_write_wait));
 			initialize_bstnode(&(wt->embed_node_for_tiber_io_wts));
 			insert_in_hashmap(&(global_tiber_io.tiber_io_wts), wt);
+			result = 1;
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
 
-	return wt;
+	return result;
 }
 
 // increments reference count and returns the pointer to a tiber_io_wt
@@ -73,6 +79,8 @@ static tiber_io_wt* fetch_reference_wt(int fd)
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
+		if(wt->marked_for_deletion) // do not fetch the wt reference, if it is already marked for deletion
+			wt = NULL;
 		if(wt != NULL)
 			wt->reference_count++;
 
@@ -87,7 +95,7 @@ static void discard_reference_wt(tiber_io_wt* wt)
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		wt->reference_count--;
-		if(wt->reference_count == 0)
+		if(wt->reference_count == 0 && wt->marked_for_deletion)
 		{
 			remove_from_hashmap(&(global_tiber_io.tiber_io_wts), wt);
 			tiber_mutex_destroy(&(wt->lock));
@@ -100,20 +108,23 @@ static void discard_reference_wt(tiber_io_wt* wt)
 	pthread_spin_unlock(&(global_tiber_io.lock));
 }
 
-static void discard_reference_wt2(int fd)
+static void mark_for_deletion_wt(int fd)
 {
 	pthread_spin_lock(&(global_tiber_io.lock));
 
 		tiber_io_wt* wt = (tiber_io_wt*) find_equals_in_hashmap(&(global_tiber_io.tiber_io_wts), &((const tiber_io_wt){.fd = fd}));
-		wt->reference_count--;
-		if(wt->reference_count == 0)
-		{
-			remove_from_hashmap(&(global_tiber_io.tiber_io_wts), wt);
-			tiber_mutex_destroy(&(wt->lock));
-			tiber_cond_destroy(&(wt->read_wait));
-			tiber_cond_destroy(&(wt->write_wait));
-			tiber_cond_destroy(&(wt->read_and_write_wait));
-			free(wt);
+		if(!(wt->marked_for_deletion))
+		{ // if not yet marked for deletion, do it and delete it if reference_count is already 0
+			wt->marked_for_deletion = 1;
+			if(wt->reference_count == 0)
+			{
+				remove_from_hashmap(&(global_tiber_io.tiber_io_wts), wt);
+				tiber_mutex_destroy(&(wt->lock));
+				tiber_cond_destroy(&(wt->read_wait));
+				tiber_cond_destroy(&(wt->write_wait));
+				tiber_cond_destroy(&(wt->read_and_write_wait));
+				free(wt);
+			}
 		}
 
 	pthread_spin_unlock(&(global_tiber_io.lock));
@@ -233,7 +244,7 @@ int register_fd_with_tiber_io(int fd)
 	{
 		struct epoll_event event;
 		event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET;
-		event.data.ptr = wt;
+		event.data.fd = fd;
 		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_ADD, fd, &event);;
 	}
 
