@@ -121,7 +121,7 @@ void* make_1000_requests(void* _t)
 
 int tiber_main()
 {
-	tiber* tb[5000];
+	tiber* tb[9500];
 
 	for(int i = 0; i < sizeof(tb)/sizeof(tb[0]); i++)
 		tb[i] = new_tiber(NULL, make_1000_requests, NULL, 512*1024, 0);
