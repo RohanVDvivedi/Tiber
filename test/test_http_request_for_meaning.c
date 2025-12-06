@@ -207,7 +207,7 @@ void* get_meaning(void* word)
 				continue;
 			if(definition0 != NULL && definition0->type == JSON_STRING)
 			{
-				sprintf(result, printf_dstring_format "\n", (char*)word, printf_dstring_params(&(definition0->json_string)));
+				sprintf(result, printf_dstring_format "\n", printf_dstring_params(&(definition0->json_string)));
 				meaning_found = 1;
 			}
 		}
