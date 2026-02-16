@@ -1,6 +1,22 @@
 #include<tiber/tiber_channel.h>
 
-int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity);
+int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
+{
+	if(max_capacity == 0)
+		return 0;
+
+	if(!initialize_dpipe(&(tch->channel), 0))
+		return 0;
+	tch->max_capacity = max_capacity;
+	if(!tiber_mutex_init(&(tch->lock)))
+		return 0;
+	if(!tiber_cond_init(&(tch->full_wait)))
+		return 0;
+	if(!tiber_cond_init(&(tch->empty_wait)))
+		return 0;
+
+	return 1;
+}
 
 void deinitialize_tiber_channel(tiber_channel* tch);
 
