@@ -11,7 +11,7 @@ void* producer(void* t)
 	char buffer[128];
 	for(int i = 0; i < 10; i++)
 	{
-		sprintf(buffer, "p%d", i);
+		sprintf(buffer, "p-%d-%s", i, (tiber_self() ? "tiber77" : "pthread"));
 		write_to_tiber_channel(&tch, buffer, strlen(buffer), ALL_OR_NONE, 1000);
 	}
 
@@ -25,7 +25,7 @@ void* consumer(void* t)
 	char buffer[128];
 	for(int i = 0; i < 10; i++)
 	{
-		cy_uint bytes = read_from_tiber_channel(&tch, buffer, 2, ALL_OR_NONE, 1000);
+		cy_uint bytes = read_from_tiber_channel(&tch, buffer, 11, ALL_OR_NONE, 1000);
 		printf("c -> %.*s -> %p %ld\n", ((int)bytes), buffer, tiber_self(), pthread_self());
 	}
 
@@ -36,7 +36,7 @@ void* consumer(void* t)
 
 int tiber_main()
 {
-	initialize_tiber_channel(&tch, UNBOUNDED_TIBER_CHANNEL_CAPACITY);
+	initialize_tiber_channel(&tch, /*UNBOUNDED_TIBER_CHANNEL_CAPACITY*/ 32);
 
 	pthread_t ppt;
 	pthread_create(&ppt, NULL, producer, NULL);
