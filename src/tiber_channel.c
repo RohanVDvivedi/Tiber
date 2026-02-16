@@ -18,7 +18,14 @@ int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 	return 1;
 }
 
-void deinitialize_tiber_channel(tiber_channel* tch);
+void deinitialize_tiber_channel(tiber_channel* tch)
+{
+	deinitialize_dpipe(&(tch->channel));
+	tch->max_capacity = 0;
+	tiber_mutex_destroy(&(tch->lock));
+	tiber_cond_destroy(&(tch->full_wait));
+	tiber_cond_destroy(&(tch->empty_wait));
+}
 
 cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
 
