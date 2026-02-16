@@ -1,5 +1,7 @@
 #include<tiber/tiber_channel.h>
 
+#include<posixutils/timespec_utils.h>
+
 extern __thread tiber* curr_tiber;
 
 int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
@@ -54,7 +56,11 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 
 		// check to expand, if yes, expand, write and break
 
-		// wait for timeout
+		// wait for timeout, and break on wait_error
+		{
+			if(tiber_cond_timedwait(tiber_cond* tc, tiber_mutex* tm, const struct timespec *abs_time))
+				break;
+		}
 	}
 
 	if(bytes_written > 0)
