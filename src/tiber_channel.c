@@ -12,7 +12,6 @@ int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 	if(!initialize_dpipe(&(tch->channel), 0))
 		return 0;
 	tch->max_capacity = max_capacity;
-	tch->is_closed = 0;
 	if(!tiber_mutex_init(&(tch->lock)))
 		return 0;
 	if(!tiber_cond_init(&(tch->writers_wait)))
@@ -27,7 +26,6 @@ void deinitialize_tiber_channel(tiber_channel* tch)
 {
 	deinitialize_dpipe(&(tch->channel));
 	tch->max_capacity = 0;
-	tch->is_closed = 0;
 	tiber_mutex_destroy(&(tch->lock));
 	tiber_cond_destroy(&(tch->writers_wait));
 	tiber_cond_destroy(&(tch->readers_wait));
@@ -49,7 +47,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 	while(1)
 	{
 		// if closed break
-		if(tch->is_closed)
+		if(is_dpipe_closed(&(tch->channel)))
 			break;
 
 		// check if anything is writable, if success, break
@@ -144,7 +142,7 @@ void close_tiber_channel(tiber_channel* tch)
 
 	tiber_mutex_lock(&(tch->lock));
 
-	tch->is_closed = 1;
+	close_dpipe(&(tch->channel));
 
 	// wake up everyone
 	tiber_cond_broadcast(&(tch->writers_wait));
@@ -161,7 +159,7 @@ int is_closed_tiber_channel(tiber_channel* tch)
 
 	tiber_mutex_lock(&(tch->lock));
 
-	int is_closed = !!(tch->is_closed);
+	int is_closed = is_dpipe_closed(&(tch->channel));
 
 	tiber_mutex_unlock(&(tch->lock));
 

@@ -21,9 +21,6 @@ struct tiber_channel
 	// the it is unbounded
 	cy_uint max_capacity;
 
-	// once closed all writes to i would fail
-	int is_closed:1;
-
 	tiber_mutex lock;
 
 	tiber_cond writers_wait;
