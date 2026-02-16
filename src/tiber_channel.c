@@ -53,10 +53,18 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 			break;
 
 		// check if anything is writable, if success, break
-		if(bytes_written = write_to_dpipe(&(tch->channel), data, data_size, op_type))
+		if((bytes_written = write_to_dpipe(&(tch->channel), data, data_size, op_type)))
 			break;
 
+		// now we know it is capacity issue
+
 		// check to expand, if yes, expand, write and break
+		{
+			cy_uint required_capacity = data_size + get_bytes_readable_in_dpipe(&(tch->channel));
+			cy_uint new_capacity = max((required_capacity * 2), tch->max_capacity);
+			if(resize_dpipe(&(tch->channel), new_capacity) && (bytes_written = write_to_dpipe(&(tch->channel), data, data_size, op_type)))
+				break;
+		}
 
 		// wait for timeout, and break on wait_error
 		if(tiber_cond_timedwait_for_microseconds(&(tch->writers_wait), &(tch->lock), &timeout_in_microseconds))
@@ -90,7 +98,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 	while(1)
 	{
 		// check if anything is readable, if success, break
-		if(bytes_read = read_from_dpipe(&(tch->channel), data, data_size, op_type))
+		if((bytes_read = read_from_dpipe(&(tch->channel), data, data_size, op_type)))
 			break;
 
 		// wait for timeout
