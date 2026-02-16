@@ -254,7 +254,7 @@ int register_fd_with_tiber_io(int fd)
 		struct epoll_event event;
 		event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLET;
 		event.data.fd = fd;
-		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_ADD, fd, &event);;
+		epoll_ctl(global_tiber_io.epoll_fd, EPOLL_CTL_ADD, fd, &event);
 	}
 
 	return 1;
