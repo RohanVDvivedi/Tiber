@@ -26,9 +26,9 @@ struct tiber_channel
 
 	tiber_mutex lock;
 
-	tiber_cond full_wait;
+	tiber_cond writers_wait;
 
-	tiber_cond empty_wait;
+	tiber_cond readers_wait;
 };
 
 /*

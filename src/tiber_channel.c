@@ -13,9 +13,9 @@ int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 	tch->is_closed = 0;
 	if(!tiber_mutex_init(&(tch->lock)))
 		return 0;
-	if(!tiber_cond_init(&(tch->full_wait)))
+	if(!tiber_cond_init(&(tch->writers_wait)))
 		return 0;
-	if(!tiber_cond_init(&(tch->empty_wait)))
+	if(!tiber_cond_init(&(tch->readers_wait)))
 		return 0;
 
 	return 1;
@@ -27,8 +27,8 @@ void deinitialize_tiber_channel(tiber_channel* tch)
 	tch->max_capacity = 0;
 	tch->is_closed = 0;
 	tiber_mutex_destroy(&(tch->lock));
-	tiber_cond_destroy(&(tch->full_wait));
-	tiber_cond_destroy(&(tch->empty_wait));
+	tiber_cond_destroy(&(tch->writers_wait));
+	tiber_cond_destroy(&(tch->readers_wait));
 }
 
 cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds)
@@ -58,6 +58,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 	if(bytes_written > 0)
 	{
 		// wake up waiting sleeping readers
+		tiber_cond_broadcast(&(tch->readers_wait));
 	}
 
 	tiber_mutex_unlock(&(tch->lock));
@@ -90,6 +91,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 		// size too big, shrink
 
 		// wake up waiting sleeping writers
+		tiber_cond_broadcast(&(tch->writers_wait));
 	}
 
 	tiber_mutex_unlock(&(tch->lock));
@@ -122,8 +124,9 @@ void close_tiber_channel(tiber_channel* tch)
 
 	tch->is_closed = 1;
 
-	tiber_cond_broadcast(&(tch->full_wait));
-	tiber_cond_broadcast(&(tch->empty_wait));
+	// wake up everyone
+	tiber_cond_broadcast(&(tch->writers_wait));
+	tiber_cond_broadcast(&(tch->readers_wait));
 
 	tiber_mutex_unlock(&(tch->lock));
 }
