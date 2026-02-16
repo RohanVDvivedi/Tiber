@@ -26,6 +26,9 @@ struct tiber_runtime
 	pheap timer_queue;
 };
 
+// this is the runtime that will be used if no runtime is available to spawn a new tiber from some external individual pthread
+extern tiber_runtime* global_runtime;
+
 tiber_runtime* new_tiber_runtime(uint64_t thread_count, uint64_t stack_size);
 
 void delete_tiber_runtime(tiber_runtime* tr);
