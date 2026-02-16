@@ -12,11 +12,11 @@ int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 	if(!initialize_dpipe(&(tch->channel), 0))
 		return 0;
 	tch->max_capacity = max_capacity;
-	if(!tiber_mutex_init(&(tch->lock)))
+	if(tiber_mutex_init(&(tch->lock)))
 		return 0;
-	if(!tiber_cond_init(&(tch->writers_wait)))
+	if(tiber_cond_init(&(tch->writers_wait)))
 		return 0;
-	if(!tiber_cond_init(&(tch->readers_wait)))
+	if(tiber_cond_init(&(tch->readers_wait)))
 		return 0;
 
 	return 1;
