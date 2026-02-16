@@ -6,7 +6,7 @@
 #include<tiber/tiber.h>
 
 /*
-	tiber_channel is an abstraction of a concurrent byte buffer that can be used for communication agnostically,
+	tiber_channel is an abstraction of a concurrent byte buffer queue that can be used for communication agnostically,
 	without knowing whether the communicating entities are tibers or pthreads or both
 */
 
@@ -28,18 +28,30 @@ struct tiber_channel
 	tiber_cond empty_wait;
 };
 
+/*
+	initialize and deinitialize functions are not concurrency safe (obviously)
+*/
+
 int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity);
 
+void deinitialize_tiber_channel(tiber_channel* tch);
+
+/*
+	the remianing 4 functions are safe to be called from any of pthread or tiber
+*/
+
+// the writes may fail due to timeout OR the channel being closed
+// so if the write fails do check if the channel is closed
 cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
 
+// the reads may fail due to timeout
 cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
 
+// number of bytes in the channel
 cy_uint get_bytes_tiber_channel(const tiber_channel* tch);
 
+// close and is_closed can be called by anyone, reader or writer
 void close_tiber_channel(tiber_channel* tch);
-
 int is_closed_tiber_channel(const tiber_channel* tch);
-
-void deinitialize_tiber_channel(tiber_channel* tch);
 
 #endif
