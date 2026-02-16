@@ -51,10 +51,10 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
 
 // number of bytes in the channel
-cy_uint get_bytes_tiber_channel(const tiber_channel* tch);
+cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch);
 
 // close and is_closed can be called by anyone, reader or writer
 void close_tiber_channel(tiber_channel* tch);
-int is_closed_tiber_channel(const tiber_channel* tch);
+int is_closed_tiber_channel(tiber_channel* tch);
 
 #endif
