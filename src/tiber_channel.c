@@ -42,7 +42,27 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 
 	tiber_mutex_lock(&(tch->lock));
 
+	cy_uint bytes_written = 0;
+
+	while(1)
+	{
+		// check if closed, if yes break
+
+		// check if enough bytes are writable, if yes write and break
+
+		// check to expand, if yes, expand, write and break
+
+		// wait for timeout
+	}
+
+	if(bytes_written > 0)
+	{
+		// wake up waiting sleeping readers
+	}
+
 	tiber_mutex_unlock(&(tch->lock));
+
+	return bytes_written;
 }
 
 cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds)
@@ -56,7 +76,25 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 
 	tiber_mutex_lock(&(tch->lock));
 
+	cy_uint bytes_read = 0;
+
+	while(1)
+	{
+		// check if enough bytes are readable, if yes read and break
+
+		// wait for timeout on 
+	}
+
+	if(bytes_read > 0)
+	{
+		// size too big, shrink
+
+		// wake up waiting sleeping writers
+	}
+
 	tiber_mutex_unlock(&(tch->lock));
+
+	return bytes_read;
 }
 
 cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
