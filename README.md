@@ -1,6 +1,14 @@
 # Tiber
 A C runtime allowing you to run fibers/coroutines, and allowing you to co-operatively context switch between them using ucontext.
 
+Tiber provides tiber-s, a pthread like construct, with a very similar api.
+Use tiber_main to allow starting a global default runtime.
+
+**Note:**
+ * Only tibers are allowed to use tiber_mutex and tiber_cond for synchronization in concurrent environment.
+ * pthreads must never use tiber_cond and tiber_mutex for synchronization.
+ * If you want a safe way to communicate agnostically between tiber and pthread heterogenously use tiber_channel for this.
+
 ## Setup instructions
 **Install dependencies :**
  * [Cutlery](https://github.com/RohanVDvivedi/Cutlery)
