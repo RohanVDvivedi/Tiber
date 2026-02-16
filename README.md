@@ -32,6 +32,7 @@ Use tiber_main to allow starting a global default runtime.
  * do not forget to include appropriate public api headers as and when needed. this includes
    * `#include<tiber/tiber.h>`
    * `#include<tiber/tiber_io.h>`
+   * `#include<tiber/tiber_channel.h>`
 
 ## Instructions for uninstalling library
 
