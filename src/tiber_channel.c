@@ -46,7 +46,9 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 
 	while(1)
 	{
-		// check if closed, if yes break
+		// if closed break
+		if(tch->is_closed)
+			break;
 
 		// check if enough bytes are writable, if yes write and break
 
