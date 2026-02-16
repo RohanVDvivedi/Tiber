@@ -25,7 +25,7 @@ void* consumer(void* t)
 	char buffer[128];
 	for(int i = 0; i < 10; i++)
 	{
-		cy_uint bytes = read_from_tiber_channel(&tch, buffer, sizeof(buffer), ALL_OR_NONE, 1000);
+		cy_uint bytes = read_from_tiber_channel(&tch, buffer, 2, ALL_OR_NONE, 1000);
 		printf("c -> %.*s -> %p %ld\n", ((int)bytes), buffer, tiber_self(), pthread_self());
 	}
 
