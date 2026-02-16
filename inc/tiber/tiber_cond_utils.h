@@ -2,7 +2,7 @@
 #define TIBER_COND_UTILS_H
 
 #include<stdint.h>
-#include<tiber.h>
+#include<tiber/tiber.h>
 #include<errno.h> // only for ETIMEDOUT
 
 #include<posixutils/pthread_cond_utils.h> // only for BLOCKING and NON_BLOCKING macros
@@ -16,7 +16,7 @@ static inline int tiber_cond_timedwait_for_milliseconds(tiber_cond *restrict con
 static inline int tiber_cond_timedwait_for_microseconds(tiber_cond *restrict cond, tiber_mutex *restrict mutex, uint64_t* duration_microseconds);
 static inline int tiber_cond_timedwait_for_nanoseconds(tiber_cond *restrict cond, tiber_mutex *restrict mutex, uint64_t* duration_nanoseconds);
 
-int tiber_cond_timedwait_for_timespec(tiber_cond_t *restrict cond, tiber_mutex_t *restrict mutex, struct timespec* duration)
+int tiber_cond_timedwait_for_timespec(tiber_cond *restrict cond, tiber_mutex *restrict mutex, struct timespec* duration)
 {
 	// get time before waiting
 	struct timespec before_wait;
