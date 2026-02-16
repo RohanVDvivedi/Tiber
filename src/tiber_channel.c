@@ -31,6 +31,27 @@ void deinitialize_tiber_channel(tiber_channel* tch)
 	tiber_cond_destroy(&(tch->readers_wait));
 }
 
+typedef struct pthread_rw_call_params pthread_rw_call_params;
+struct pthread_rw_call_params
+{
+	cy_uint (*rw_func)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t);
+
+	tiber_channel* tch;
+	void* data;
+	cy_uint data_size;
+	dpipe_operation_type op_type;
+	uint64_t timeout_in_microseconds;
+
+	cy_uint bytes_done;
+};
+
+static void* pthread_rw_call(void* params)
+{
+	pthread_rw_call_params* p = params;
+	p->bytes_done = p->rw_func(p->tch, p->data, p->data_size, p->op_type, p->timeout_in_microseconds);
+	return NULL;
+}
+
 cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds)
 {
 	if(data_size == 0)
@@ -38,7 +59,21 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 
 	// make this call pthread safe
 	if(curr_tiber == NULL)
-		exit(-1);
+	{
+		pthread_rw_call_params p = {
+			(cy_uint (*)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t))write_to_tiber_channel,
+			tch,
+			(void*)data,
+			data_size,
+			op_type,
+			timeout_in_microseconds,
+			0
+		};
+		tiber* tb = new_tiber(NULL, pthread_rw_call, &p, 4096, 0);
+		void* _ret;
+		tiber_join(tb, &_ret);
+		return p.bytes_done;
+	}
 
 	tiber_mutex_lock(&(tch->lock));
 
@@ -87,7 +122,21 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 
 	// make this call pthread safe
 	if(curr_tiber == NULL)
-		exit(-1);
+	{
+		pthread_rw_call_params p = {
+			(cy_uint (*)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t))read_from_tiber_channel,
+			tch,
+			data,
+			data_size,
+			op_type,
+			timeout_in_microseconds,
+			0
+		};
+		tiber* tb = new_tiber(NULL, pthread_rw_call, &p, 4096, 0);
+		void* _ret;
+		tiber_join(tb, &_ret);
+		return p.bytes_done;
+	}
 
 	tiber_mutex_lock(&(tch->lock));
 
