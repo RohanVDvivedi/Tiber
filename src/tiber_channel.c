@@ -94,9 +94,10 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 		// now we know it is capacity issue
 
 		// check to expand, if yes, expand, write and break
+		if(tch->max_capacity == UNBOUNDED_TIBER_CHANNEL_CAPACITY || tch->max_capacity > get_capacity_dpipe(&(tch->channel)))
 		{
 			cy_uint required_capacity = data_size + get_bytes_readable_in_dpipe(&(tch->channel));
-			cy_uint new_capacity = max((required_capacity * 2), tch->max_capacity);
+			cy_uint new_capacity = min((required_capacity * 2), tch->max_capacity);
 			if(resize_dpipe(&(tch->channel), new_capacity) && (bytes_written = write_to_dpipe(&(tch->channel), data, data_size, op_type)))
 				break;
 		}
