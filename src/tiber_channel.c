@@ -1,4 +1,4 @@
-#include<tiber/tiber_channle.h>
+#include<tiber/tiber_channel.h>
 
 int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity);
 
