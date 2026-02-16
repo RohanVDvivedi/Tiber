@@ -7,7 +7,7 @@ DOWNLOAD_DIR:=/usr/local
 # we may download all the public headers
 
 # list of public api headers (only these headers will be installed)
-PUBLIC_HEADERS:=${PROJECT_NAME}.h tiber_io.h tiber_stream_for_file_descriptor.h
+PUBLIC_HEADERS:=${PROJECT_NAME}.h tiber_io.h tiber_stream_for_file_descriptor.h tiber_channel.h tiber_cond_utils.h
 # the library, which we will create
 LIBRARY:=lib${PROJECT_NAME}.a
 # the binary, which will use the created library
