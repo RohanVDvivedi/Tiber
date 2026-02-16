@@ -2,11 +2,19 @@
 #include<tiber/tiber_channel.h>
 
 #include<stdio.h>
+#include<string.h>
 
 tiber_channel tch;
 
 void* producer(void* t)
 {
+	char buffer[128];
+	for(int i = 0; i < 10; i++)
+	{
+		sprintf(buffer, "p%d", i);
+		write_to_tiber_channel(&tch, buffer, strlen(buffer), ALL_OR_NONE, 1000);
+	}
+
 	printf("PRODUCER COMPLETED %p %ld\n", tiber_self(), pthread_self());
 
 	return NULL;
@@ -14,6 +22,13 @@ void* producer(void* t)
 
 void* consumer(void* t)
 {
+	char buffer[128];
+	for(int i = 0; i < 10; i++)
+	{
+		cy_uint bytes = read_from_tiber_channel(&tch, buffer, sizeof(buffer), ALL_OR_NONE, 1000);
+		printf("c -> %.*s -> %p %ld\n", ((int)bytes), buffer, tiber_self(), pthread_self());
+	}
+
 	printf("CONSUMER COMPLETED %p %ld\n", tiber_self(), pthread_self());
 
 	return NULL;
