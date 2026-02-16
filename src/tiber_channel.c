@@ -1,5 +1,7 @@
 #include<tiber/tiber_channel.h>
 
+extern __thread tiber* curr_tiber;
+
 int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 {
 	if(max_capacity == 0)
@@ -29,12 +31,40 @@ void deinitialize_tiber_channel(tiber_channel* tch)
 	tiber_cond_destroy(&(tch->empty_wait));
 }
 
-cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
+cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds)
+{
+	if(data_size == 0)
+		return 0;
 
-cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds);
+	// make this call pthread safe
+	if(curr_tiber == NULL)
+		exit(-1);
+
+	tiber_mutex_lock(&(tch->lock));
+
+	tiber_mutex_unlock(&(tch->lock));
+}
+
+cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_size, dpipe_operation_type op_type, uint64_t timeout_in_microseconds)
+{
+	if(data_size == 0)
+		return 0;
+
+	// make this call pthread safe
+	if(curr_tiber == NULL)
+		exit(-1);
+
+	tiber_mutex_lock(&(tch->lock));
+
+	tiber_mutex_unlock(&(tch->lock));
+}
 
 cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 {
+	// make this call pthread safe
+	if(curr_tiber == NULL)
+		exit(-1);
+
 	tiber_mutex_lock(&(tch->lock));
 
 	cy_uint bytes_readable = get_bytes_readable_in_dpipe(&(tch->channel));
@@ -46,6 +76,10 @@ cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 
 void close_tiber_channel(tiber_channel* tch)
 {
+	// make this call pthread safe
+	if(curr_tiber == NULL)
+		exit(-1);
+
 	tiber_mutex_lock(&(tch->lock));
 
 	tch->is_closed = 1;
@@ -58,6 +92,10 @@ void close_tiber_channel(tiber_channel* tch)
 
 int is_closed_tiber_channel(tiber_channel* tch)
 {
+	// make this call pthread safe
+	if(curr_tiber == NULL)
+		exit(-1);
+
 	tiber_mutex_lock(&(tch->lock));
 
 	int is_closed = !!(tch->is_closed);
