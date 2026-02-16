@@ -34,14 +34,16 @@ void deinitialize_tiber_channel(tiber_channel* tch)
 typedef struct pthread_rw_call_params pthread_rw_call_params;
 struct pthread_rw_call_params
 {
-	cy_uint (*rw_func)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t);
+	cy_uint (*rw_func)();
 
+	// input params
 	tiber_channel* tch;
 	void* data;
 	cy_uint data_size;
 	dpipe_operation_type op_type;
 	uint64_t timeout_in_microseconds;
 
+	// return value
 	cy_uint bytes_done;
 };
 
@@ -61,7 +63,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 	if(curr_tiber == NULL)
 	{
 		pthread_rw_call_params p = {
-			(cy_uint (*)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t))write_to_tiber_channel,
+			write_to_tiber_channel,
 			tch,
 			(void*)data,
 			data_size,
@@ -124,7 +126,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 	if(curr_tiber == NULL)
 	{
 		pthread_rw_call_params p = {
-			(cy_uint (*)(tiber_channel*, void*, cy_uint, dpipe_operation_type, uint64_t))read_from_tiber_channel,
+			read_from_tiber_channel,
 			tch,
 			data,
 			data_size,
@@ -168,11 +170,43 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 	return bytes_read;
 }
 
+typedef struct pthread_s_call_params pthread_s_call_params;
+struct pthread_s_call_params
+{
+	void (*s_func)();
+
+	tiber_channel* tch;
+
+	cy_uint bytes_readable;
+	int is_closed;
+};
+
+static void* pthread_s_call(void* params)
+{
+	pthread_s_call_params* p = params;
+	if(p->s_func == ((void (*)())get_bytes_readable_tiber_channel))
+		p->bytes_readable = get_bytes_readable_tiber_channel(p->tch);
+	else if(p->s_func == ((void (*)())close_tiber_channel))
+		close_tiber_channel(p->tch);
+	else if(p->s_func == ((void (*)())is_closed_tiber_channel))
+		p->is_closed = is_closed_tiber_channel(p->tch);
+	return NULL;
+}
+
 cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 {
 	// make this call pthread safe
 	if(curr_tiber == NULL)
-		exit(-1);
+	{
+		pthread_s_call_params p = {
+			(void (*)())get_bytes_readable_tiber_channel,
+			tch,
+		};
+		tiber* tb = new_tiber(NULL, pthread_s_call, &p, 4096, 0);
+		void* _ret;
+		tiber_join(tb, &_ret);
+		return p.bytes_readable;
+	}
 
 	tiber_mutex_lock(&(tch->lock));
 
@@ -187,7 +221,16 @@ void close_tiber_channel(tiber_channel* tch)
 {
 	// make this call pthread safe
 	if(curr_tiber == NULL)
-		exit(-1);
+	{
+		pthread_s_call_params p = {
+			(void (*)())close_tiber_channel,
+			tch,
+		};
+		tiber* tb = new_tiber(NULL, pthread_s_call, &p, 4096, 0);
+		void* _ret;
+		tiber_join(tb, &_ret);
+		return;
+	}
 
 	tiber_mutex_lock(&(tch->lock));
 
@@ -204,7 +247,16 @@ int is_closed_tiber_channel(tiber_channel* tch)
 {
 	// make this call pthread safe
 	if(curr_tiber == NULL)
-		exit(-1);
+	{
+		pthread_s_call_params p = {
+			(void (*)())is_closed_tiber_channel,
+			tch,
+		};
+		tiber* tb = new_tiber(NULL, pthread_s_call, &p, 4096, 0);
+		void* _ret;
+		tiber_join(tb, &_ret);
+		return p.is_closed;
+	}
 
 	tiber_mutex_lock(&(tch->lock));
 
