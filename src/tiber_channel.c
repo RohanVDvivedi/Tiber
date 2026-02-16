@@ -52,7 +52,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 		if(tch->is_closed)
 			break;
 
-		// check if enough bytes are writable, if yes write and break
+		// check if anything is writable, if success, break
 
 		// check to expand, if yes, expand, write and break
 
@@ -87,7 +87,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 
 	while(1)
 	{
-		// check if enough bytes are readable, if yes read and break
+		// check if anything is readable, if success, break
 
 		// wait for timeout
 		if(tiber_cond_timedwait_for_microseconds(&(tch->readers_wait), &(tch->lock), &timeout_in_microseconds))
