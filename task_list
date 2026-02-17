@@ -1,0 +1,7 @@
+ * run_function_in_synchronous_tiber_on_current_stack()
+   * same parameters as new_tiber()
+   * makes a tiber on current thread or current tiber, to call another function inside another tiber
+   * tiber itself and the stack are not allocated
+   * make a new tiber new function that takes in a tiber* and void* stack as inputs, and still returns a tiber*
+   * name these new input params as optional_preallocated_self and optional_preallocated_stack
+   * tiber needs 2 flags to suggest if it needs to free stack memory or itself
