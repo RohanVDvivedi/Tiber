@@ -6,6 +6,8 @@
 
 tiber_channel tch;
 
+tiber_channel completed;
+
 void* producer(void* t)
 {
 	char buffer[128];
@@ -13,6 +15,18 @@ void* producer(void* t)
 	{
 		sprintf(buffer, "p-%d-%s", i, (tiber_self() ? "tiber77" : "pthread"));
 		write_to_tiber_channel(&tch, buffer, strlen(buffer), ALL_OR_NONE, 1000);
+	}
+
+	if(tiber_self()) // tiber will send a completion byte on completion
+	{
+		uint8_t completion_byte = 1;
+		write_to_tiber_channel(&tch, &completion_byte, 1, ALL_OR_NONE, BLOCKING);
+	}
+	else // pthread will wait to receive it and once received close the tiber finally, to prevent any more writes
+	{
+		uint8_t completion_byte;
+		read_from_tiber_channel(&completed, &completion_byte, 1, ALL_OR_NONE, BLOCKING);
+		close_tiber_channel(&tch);
 	}
 
 	printf("PRODUCER COMPLETED %p %ld\n", tiber_self(), pthread_self());
@@ -23,7 +37,7 @@ void* producer(void* t)
 void* consumer(void* t)
 {
 	char buffer[128];
-	for(int i = 0; i < 10; i++)
+	while((get_bytes_readable_tiber_channel(&tch) > 0) || !is_closed_tiber_channel(&tch)) // keep on reading while the channel is open or has pending bytes to be read
 	{
 		cy_uint bytes = read_from_tiber_channel(&tch, buffer, 11, ALL_OR_NONE, 1000);
 		printf("c -> %.*s -> %p %ld\n", ((int)bytes), buffer, tiber_self(), pthread_self());
@@ -38,6 +52,9 @@ int tiber_main()
 {
 	int res = initialize_tiber_channel(&tch, /*UNBOUNDED_TIBER_CHANNEL_CAPACITY*/ 32);
 	printf("init channel = %d\n", res);
+
+	res = initialize_tiber_channel(&completed, 1);
+	printf("init completion channel = %d\n", res);
 
 	pthread_t ppt;
 	pthread_create(&ppt, NULL, producer, NULL);
