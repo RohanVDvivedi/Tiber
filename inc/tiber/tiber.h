@@ -121,6 +121,9 @@ struct tiber_result
 typedef struct tiber tiber;
 struct tiber
 {
+	int need_to_free_tiber; // call free on the tiber itself only if this bit is set
+	int need_to_free_stack; // call free on the stack only if this bit is set
+
 	// this is the runtime this tiber will be executed on, it is static it will no change
 	tiber_runtime* runtime;
 
@@ -174,8 +177,9 @@ struct tiber
 	*/
 };
 
-// if the tiber_runtime* tr == NULL, then we will pick the runtime of the curr_tiber that is calling this function
-tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached);
+// if the tiber_runtime* tr == NULL, then we will pick the runtime of the curr_tiber that is calling this function OR will use the global_runtime if available
+// the optional_* params may be NULL, if they are NULL, tiber will malloc else tiber will use the provided preallocated memory
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached, tiber* optional_preallocated_tiber, void* optional_preallocated_stack);
 
 // user may never call this function
 void delete_tiber(tiber* tb);

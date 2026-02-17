@@ -137,17 +137,37 @@ static void tiber_entry_wrapper()
 
 // tiber functions
 
-tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached)
+tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* input_p, uint64_t stack_size, int is_detached, tiber* optional_preallocated_tiber, void* optional_preallocated_stack)
 {
-	tiber* tb = malloc(sizeof(tiber));
-	if(tb == NULL)
-		return NULL;
-
-	tb->stack = malloc(stack_size);
-	if(tb->stack == NULL)
+	tiber* tb = NULL;
+	if(optional_preallocated_tiber != NULL)
 	{
-		free(tb);
-		return NULL;
+		tb = optional_preallocated_tiber;
+		tb->need_to_free_tiber = 0;
+	}
+	else
+	{
+		tb = malloc(sizeof(tiber));
+		if(tb == NULL)
+			return NULL;
+		tb->need_to_free_tiber = 1; // we just malloc-ed so we need to now free it
+	}
+
+	if(optional_preallocated_stack != NULL)
+	{
+		tb->stack = optional_preallocated_stack;
+		tb->need_to_free_stack = 0;
+	}
+	else
+	{
+		tb->stack = malloc(stack_size);
+		if(tb->stack == NULL)
+		{
+			if(tb->need_to_free_tiber)
+				free(tb);
+			return NULL;
+		}
+		tb->need_to_free_stack = 1; // we just malloc-ed so we need to now free it
 	}
 
 	if(tr != NULL)	// if a runtime is provided use that one
@@ -204,8 +224,11 @@ void delete_tiber(tiber* tb)
 	pthread_spin_destroy(&(tb->state_lock));
 	pthread_spin_destroy(&(tb->reference_count_lock));
 
-	free(tb->stack);
-	free(tb);
+	if(tb->need_to_free_stack)
+		free(tb->stack);
+
+	if(tb->need_to_free_tiber)
+		free(tb);
 }
 
 int tiber_join(tiber* tb, void** return_value)
