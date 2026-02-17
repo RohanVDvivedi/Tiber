@@ -74,7 +74,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 			0
 		};
 		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
-		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, &tb_stack);
+		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
 		return p.bytes_done;
@@ -139,7 +139,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 			0
 		};
 		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
-		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, &tb_stack);
+		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
 		return p.bytes_done;
@@ -208,7 +208,7 @@ cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 			tch,
 		};
 		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
-		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, &tb_stack);
+		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
 		return p.bytes_readable;
@@ -233,7 +233,7 @@ void close_tiber_channel(tiber_channel* tch)
 			tch,
 		};
 		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
-		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, &tb_stack);
+		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
 		return;
@@ -260,7 +260,7 @@ int is_closed_tiber_channel(tiber_channel* tch)
 			tch,
 		};
 		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
-		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, &tb_stack);
+		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
 		return p.is_closed;
