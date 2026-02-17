@@ -4,7 +4,7 @@
 
 extern __thread tiber* curr_tiber;
 
-#define PTHREAD_SAFETY_TIBER_STACK_SIZE 4096
+#define PTHREAD_SAFETY_TIBER_STACK_SIZE (512 * 1024)
 
 int initialize_tiber_channel(tiber_channel* tch, cy_uint max_capacity)
 {

@@ -36,7 +36,8 @@ void* consumer(void* t)
 
 int tiber_main()
 {
-	initialize_tiber_channel(&tch, /*UNBOUNDED_TIBER_CHANNEL_CAPACITY*/ 32);
+	int res = initialize_tiber_channel(&tch, /*UNBOUNDED_TIBER_CHANNEL_CAPACITY*/ 32);
+	printf("init channel = %d\n", res);
 
 	pthread_t ppt;
 	pthread_create(&ppt, NULL, producer, NULL);
