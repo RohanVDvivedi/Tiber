@@ -71,6 +71,7 @@ int tiber_main()
 	tiber_join(ct, &return_value);
 
 	deinitialize_tiber_channel(&tch);
+	deinitialize_tiber_channel(&completed);
 
 	printf("TEST COMPLETE\n");
 
