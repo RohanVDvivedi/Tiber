@@ -178,11 +178,11 @@ int tiber_main()
 
 	// use the global runtime
 	for(unsigned long long int i = 0; i < PRODUCER_TASKS; i++)
-		ptb[i] = new_tiber(NULL, producer_func, (void*)((uintptr_t)i), 64*1024, 0);
+		ptb[i] = new_tiber(NULL, producer_func, (void*)((uintptr_t)i), 64*1024, 0, NULL, NULL);
 
 	// use the global runtime
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
-		ctb[i] = new_tiber(NULL, consumer_func, NULL, 64*1024, 0);
+		ctb[i] = new_tiber(NULL, consumer_func, NULL, 64*1024, 0, NULL, NULL);
 
 	void* result_temp = NULL;
 

@@ -41,7 +41,7 @@ int tiber_main(int argc, char** argv)
 	tiber** tb = malloc(sizeof(tiber*) * argc);
 
 	for(int i = 1; i < argc; i++)
-		tb[i] = new_tiber(NULL, get_meaning, argv[i], 512*1024, 0);
+		tb[i] = new_tiber(NULL, get_meaning, argv[i], 512*1024, 0, NULL, NULL);
 
 	for(int i = 1; i < argc; i++)
 	{

@@ -40,11 +40,11 @@ int tiber_main()
 
 	pthread_t ppt;
 	pthread_create(&ppt, NULL, producer, NULL);
-	tiber* pt = new_tiber(NULL, producer, NULL, 2 * 1024 * 1024, 0);
+	tiber* pt = new_tiber(NULL, producer, NULL, 2 * 1024 * 1024, 0, NULL, NULL);
 
 	pthread_t cpt;
 	pthread_create(&cpt, NULL, consumer, NULL);
-	tiber* ct = new_tiber(NULL, consumer, NULL, 2 * 1024 * 1024, 0);
+	tiber* ct = new_tiber(NULL, consumer, NULL, 2 * 1024 * 1024, 0, NULL, NULL);
 
 	void* return_value;
 	pthread_join(ppt, &return_value);
