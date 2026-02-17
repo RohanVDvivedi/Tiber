@@ -73,7 +73,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 			timeout_in_microseconds,
 			0
 		};
-		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
+		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
@@ -138,7 +138,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 			timeout_in_microseconds,
 			0
 		};
-		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
+		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
@@ -207,7 +207,7 @@ cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 			(void (*)())get_bytes_readable_tiber_channel,
 			tch,
 		};
-		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
+		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
@@ -232,7 +232,7 @@ void close_tiber_channel(tiber_channel* tch)
 			(void (*)())close_tiber_channel,
 			tch,
 		};
-		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
+		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
@@ -259,7 +259,7 @@ int is_closed_tiber_channel(tiber_channel* tch)
 			(void (*)())is_closed_tiber_channel,
 			tch,
 		};
-		tiber tb; uint64_t tb_stack[PTHREAD_SAFETY_TIBER_STACK_SIZE / sizeof(uint64_t)];
+		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
 		void* _ret;
 		tiber_join(&tb, &_ret);
