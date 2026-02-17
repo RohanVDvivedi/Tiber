@@ -54,5 +54,8 @@ int tiber_main()
 	tiber_join(ct, &return_value);
 
 	deinitialize_tiber_channel(&tch);
+
+	printf("TEST COMPLETE\n");
+
 	return 0;
 }
