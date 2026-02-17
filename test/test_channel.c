@@ -20,7 +20,7 @@ void* producer(void* t)
 	if(tiber_self()) // tiber will send a completion byte on completion
 	{
 		uint8_t completion_byte = 1;
-		write_to_tiber_channel(&tch, &completion_byte, 1, ALL_OR_NONE, BLOCKING);
+		write_to_tiber_channel(&completed, &completion_byte, 1, ALL_OR_NONE, BLOCKING);
 	}
 	else // pthread will wait to receive it and once received close the tiber finally, to prevent any more writes
 	{
