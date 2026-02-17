@@ -39,10 +39,14 @@ int main(int argc, char** argv)
 	// create runtime for sufficient threads each with 3 MB of stack space
 	global_runtime = new_tiber_runtime(sysconf(_SC_NPROCESSORS_ONLN), 3 * 1024 * 1024);
 
-	tiber* tb = new_tiber(global_runtime, tiber_main_wrapper, NULL, 3 * 1024 * 1024, 0);
+	// maka a main running tiber on this very stack
+	tiber main_tiber;
+	uint64_t main_tiber_stack[(3 * 1024 * 1024) / sizeof(uint64_t)]; // give it 3MB stack from the main thread's stack
+	new_tiber(global_runtime, tiber_main_wrapper, NULL, sizeof(main_tiber_stack), 0, &main_tiber, &main_tiber_stack);
 
+	// then join with it
 	void* result = NULL;
-	tiber_join(tb, &result);
+	tiber_join(&main_tiber, &result);
 
 	delete_tiber_runtime(global_runtime);
 

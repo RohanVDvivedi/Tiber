@@ -193,7 +193,7 @@ void initialize_tiber_io()
 	}
 
 	// tiber that runs the epoll_loop
-	global_tiber_io.io_loop = new_tiber(global_tiber_io.io_runtime, tiber_io_epoll_loop, NULL, 1024 * 1024, 0);
+	global_tiber_io.io_loop = new_tiber(global_tiber_io.io_runtime, tiber_io_epoll_loop, NULL, 1024 * 1024, 0, NULL, NULL);
 }
 
 static void delete_all_from_tiber_io_wts(void* resource_p, const void* data_p)
