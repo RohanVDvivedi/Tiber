@@ -28,6 +28,13 @@ void* tiber_main_wrapper(void* t)
 
 tiber_runtime* global_runtime = NULL;
 
+// amount of stack space for the threads running in the global runtime
+#define GLOBAL_RUNTIME_THREAD_POOL_STACK_SIZE (3 * 1024 * 1024)
+
+// stack size of the main tiber, big enough for most use cases, and to fit on the processor created main thread
+// and not too big to not fit on main thread
+#define MAIN_TIBER_STACK_SIZE (3 * 1024 * 1024)
+
 int main(int argc, char** argv)
 {
 	// global inputs to tiber
@@ -37,12 +44,12 @@ int main(int argc, char** argv)
 	initialize_tiber_io();
 
 	// create runtime for sufficient threads each with 3 MB of stack space
-	global_runtime = new_tiber_runtime(sysconf(_SC_NPROCESSORS_ONLN), 3 * 1024 * 1024);
+	global_runtime = new_tiber_runtime(sysconf(_SC_NPROCESSORS_ONLN), GLOBAL_RUNTIME_THREAD_POOL_STACK_SIZE);
 
 	// maka a main running tiber on this very stack
 	tiber main_tiber;
-	uint64_t main_tiber_stack[(3 * 1024 * 1024) / sizeof(uint64_t)]; // give it 3MB stack from the main thread's stack
-	new_tiber(global_runtime, tiber_main_wrapper, NULL, sizeof(main_tiber_stack), 0, &main_tiber, &main_tiber_stack);
+	void* main_tiber_stack = alloca(MAIN_TIBER_STACK_SIZE); // give it 3MB stack from the main thread's stack
+	new_tiber(global_runtime, tiber_main_wrapper, NULL, MAIN_TIBER_STACK_SIZE, 0, &main_tiber, main_tiber_stack);
 
 	// then join with it
 	void* result = NULL;
