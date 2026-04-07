@@ -7,7 +7,7 @@
 #include<unistd.h>
 
 #define RUNTIME_THREADS_COUNT 	16
-#define STACK_SIZE              532*1024
+#define STACK_SIZE              (1*1024*1024)
 
 #define OPERATIONS              10000000ULL
 
@@ -178,11 +178,11 @@ int tiber_main()
 
 	// use the global runtime
 	for(unsigned long long int i = 0; i < PRODUCER_TASKS; i++)
-		ptb[i] = new_tiber(NULL, producer_func, (void*)((uintptr_t)i), 64*1024, 0, NULL, NULL);
+		ptb[i] = new_tiber(NULL, producer_func, (void*)((uintptr_t)i), STACK_SIZE, 0, NULL, NULL);
 
 	// use the global runtime
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
-		ctb[i] = new_tiber(NULL, consumer_func, NULL, 64*1024, 0, NULL, NULL);
+		ctb[i] = new_tiber(NULL, consumer_func, NULL, STACK_SIZE, 0, NULL, NULL);
 
 	void* result_temp = NULL;
 

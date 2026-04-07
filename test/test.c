@@ -5,7 +5,7 @@
 #include<unistd.h>
 
 #define RUNTIME_THREADS_COUNT 	2
-#define STACK_SIZE              32*1024
+#define STACK_SIZE              (1*1024*1024)
 
 void* tb1_func(void* p)
 {
@@ -238,15 +238,15 @@ int tiber_main()
 	tiber* tb[20] = {};
 
 	// use the global runtime
-	tb[1] = new_tiber(NULL, tb1_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[2] = new_tiber(NULL, tb2_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[3] = new_tiber(NULL, tb3_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[4] = new_tiber(NULL, tb4_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[5] = new_tiber(NULL, tb5_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[6] = new_tiber(NULL, tb6_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[7] = new_tiber(NULL, tb7_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[8] = new_tiber(NULL, tb8_func, NULL, 16*1024, 0, NULL, NULL);
-	tb[9] = new_tiber(NULL, tb9_func, tb, 16*1024, 0, NULL, NULL);
+	tb[1] = new_tiber(NULL, tb1_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[2] = new_tiber(NULL, tb2_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[3] = new_tiber(NULL, tb3_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[4] = new_tiber(NULL, tb4_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[5] = new_tiber(NULL, tb5_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[6] = new_tiber(NULL, tb6_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[7] = new_tiber(NULL, tb7_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[8] = new_tiber(NULL, tb8_func, NULL, STACK_SIZE, 0, NULL, NULL);
+	tb[9] = new_tiber(NULL, tb9_func, tb, STACK_SIZE, 0, NULL, NULL);
 
 	void* return_value;
 	tiber_join(tb[9], &return_value);
