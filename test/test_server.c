@@ -77,6 +77,8 @@ void* serve(void* fd_v)
 	}
 
 	tiber_close(fd);
+
+	return NULL;
 }
 
 int tiber_main()

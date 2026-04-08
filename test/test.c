@@ -4,7 +4,6 @@
 #include<stdlib.h>
 #include<unistd.h>
 
-#define RUNTIME_THREADS_COUNT 	2
 #define STACK_SIZE              (1*1024*1024)
 
 void* tb1_func(void* p)

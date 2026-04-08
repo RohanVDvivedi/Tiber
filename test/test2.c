@@ -4,7 +4,6 @@
 #include<stdlib.h>
 #include<unistd.h>
 
-#define RUNTIME_THREADS_COUNT 	16
 #define STACK_SIZE              (1*1024*1024)
 
 #define INCREMENTS_PER_TASK    10000ULL
