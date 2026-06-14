@@ -7,9 +7,6 @@
 // the current tiber that this thread is executing get's stored here
 __thread tiber* curr_tiber = NULL;
 
-// the context that this tiber must return to is stored here for each of the threads, it is the context of the thread that this tiber must return to after execution
-__thread ucontext_t thread_context;
-
 /*
 	puts tiber as thread local variable of this thread
 	puts tiber in running state
@@ -36,16 +33,19 @@ static void* tiber_job_func(void* tb_v)
 		pthread_spin_unlock(&(curr_tiber->state_lock));
 
 		// swap the context to run the tiber
-		if(-1 == getcontext(&thread_context))
+		ucontext_t thread_context;
+		curr_tiber->thread_context = &thread_context;
+		if(-1 == getcontext(curr_tiber->thread_context))
 		{
 			printf("TIBER BUG: thread_context could not be populated\n");
 			exit(-1);
 		}
-		if(-1 == swapcontext(&thread_context, &(curr_tiber->context)))
+		if(-1 == swapcontext(curr_tiber->thread_context, &(curr_tiber->context)))
 		{
 			printf("TIBER BUG: tiber could not context switch into itself\n");
 			exit(-1);
 		}
+		curr_tiber->thread_context = NULL;
 
 		// change curr_tiber's state if running to killed
 		// because it returned from the entry function
@@ -79,7 +79,7 @@ static void* tiber_job_func(void* tb_v)
 void switch_from_this_tiber_to_caller_thread()
 {
 	// swap the context out, to start running the caller thread
-	if(-1 == swapcontext(&(curr_tiber->context), &thread_context))
+	if(-1 == swapcontext(&(curr_tiber->context), curr_tiber->thread_context))
 	{
 		printf("TIBER BUG: tiber could not context switch into it's caller thread\n");
 		exit(-1);

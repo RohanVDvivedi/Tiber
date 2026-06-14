@@ -194,6 +194,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 	tb->context.uc_stack.ss_flags = 0;
 	tb->context.uc_link = NULL; // we ill be migrating stacks to run this tiber so do not use uc_link
 	makecontext(&(tb->context), (void(*)())tiber_entry_wrapper, 0);
+	tb->thread_context = NULL;
 
 	pthread_spin_init(&(tb->state_lock), PTHREAD_PROCESS_PRIVATE);
 	tb->state = TIBER_QUEUED;	// this is the initial state, as we will queue it riht after initialization

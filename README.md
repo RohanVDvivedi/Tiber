@@ -8,7 +8,6 @@ Use tiber_main to allow starting a global default runtime.
  * Only tibers are allowed to use tiber_mutex and tiber_cond for synchronization in concurrent environment.
  * pthreads must never use tiber_cond and tiber_mutex for synchronization.
  * If you want a safe way to communicate agnostically between tiber and pthread heterogenously use tiber_channel for this.
- * unstable when the dependent binaries are built with -flto flag.
 
 ## Setup instructions
 **Install dependencies :**

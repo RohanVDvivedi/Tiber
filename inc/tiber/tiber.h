@@ -141,6 +141,7 @@ struct tiber
 	// tiber contexts, while the thread's context it works with is in its thread local (check the source tiber_runtime.c)
 	pthread_spinlock_t context_lock;
 	ucontext_t context;
+	ucontext_t* thread_context;
 
 	// tiber's state
 	pthread_spinlock_t state_lock;
