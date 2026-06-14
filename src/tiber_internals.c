@@ -15,7 +15,7 @@ __thread tiber* curr_tiber = NULL;
 	releases it's context lock
 	returns
 
-	** only this function takes the context_lock of the tiber
+	** only this function takes the context_lock of the tiber for a meaningful reason
 */
 static void* tiber_job_func(void* tb_v)
 {
