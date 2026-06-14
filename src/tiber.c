@@ -250,6 +250,10 @@ int tiber_join(tiber* tb, void** return_value_p)
 	// loop continuously while it's reference count does not reach 0
 	while(fetch_tiber_reference_count(tb) > 0){}
 
+	// following context_lock unlock, ensures that the context switching that lets the tiber exit finally id done safely
+	pthread_spin_lock(&(tb->context_lock));
+	pthread_spin_unlock(&(tb->context_lock));
+
 	delete_tiber(tb);
 
 	return 0;
@@ -277,6 +281,10 @@ int tiber_detach(tiber* tb)
 
 		// loop continuously while it's reference count does not reach 0
 		while(fetch_tiber_reference_count(tb) > 0){}
+
+		// following context_lock unlock, ensures that the context switching that lets the tiber exit finally id done safely
+		pthread_spin_lock(&(tb->context_lock));
+		pthread_spin_unlock(&(tb->context_lock));
 
 		delete_tiber(tb);
 	}
