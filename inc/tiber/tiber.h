@@ -138,7 +138,7 @@ struct tiber
 	// the return from the entry_func gets set here after the tiber is killed
 	tiber_result result;
 
-	// tiber contexts, while the thread's context it works with is in its thread local (check the source tiber_runtime.c)
+	// tiber contexts, while the thread's context (thread_context) it works with, also has it's pointer stored here while the this context is swapped to be executed
 	pthread_spinlock_t context_lock;
 	ucontext_t context;
 	ucontext_t* thread_context;
