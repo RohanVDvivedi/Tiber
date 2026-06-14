@@ -51,9 +51,8 @@ int main(int argc, char** argv)
 	void* main_tiber_stack = alloca(MAIN_TIBER_STACK_SIZE); // give it 3MB stack from the main thread's stack
 	new_tiber(global_runtime, tiber_main_wrapper, NULL, MAIN_TIBER_STACK_SIZE, 0, &main_tiber, main_tiber_stack);
 
-	// then join with it
-	void* result = NULL;
-	tiber_join(&main_tiber, &result);
+	// then join with it, return not caught
+	tiber_join(&main_tiber, NULL);
 
 	delete_tiber_runtime(global_runtime);
 

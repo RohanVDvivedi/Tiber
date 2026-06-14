@@ -75,8 +75,7 @@ cy_uint write_to_tiber_channel(tiber_channel* tch, const void* data, cy_uint dat
 		};
 		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
-		void* _ret;
-		tiber_join(&tb, &_ret);
+		tiber_join(&tb, NULL);
 		return p.bytes_done;
 	}
 
@@ -140,8 +139,7 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 		};
 		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_rw_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
-		void* _ret;
-		tiber_join(&tb, &_ret);
+		tiber_join(&tb, NULL);
 		return p.bytes_done;
 	}
 
@@ -209,8 +207,7 @@ cy_uint get_bytes_readable_tiber_channel(tiber_channel* tch)
 		};
 		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
-		void* _ret;
-		tiber_join(&tb, &_ret);
+		tiber_join(&tb, NULL);
 		return p.bytes_readable;
 	}
 
@@ -234,8 +231,7 @@ void close_tiber_channel(tiber_channel* tch)
 		};
 		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
-		void* _ret;
-		tiber_join(&tb, &_ret);
+		tiber_join(&tb, NULL);
 		return;
 	}
 
@@ -261,8 +257,7 @@ int is_closed_tiber_channel(tiber_channel* tch)
 		};
 		tiber tb; void* tb_stack = alloca(PTHREAD_SAFETY_TIBER_STACK_SIZE);
 		new_tiber(NULL, pthread_s_call, &p, PTHREAD_SAFETY_TIBER_STACK_SIZE, 0, &tb, tb_stack);
-		void* _ret;
-		tiber_join(&tb, &_ret);
+		tiber_join(&tb, NULL);
 		return p.is_closed;
 	}
 

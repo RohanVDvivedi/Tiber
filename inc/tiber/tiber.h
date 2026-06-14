@@ -185,7 +185,7 @@ tiber* new_tiber(tiber_runtime* tr, void* (*entry_func)(void* input_p), void* in
 void delete_tiber(tiber* tb);
 
 // only the below 2 functions actually delete the tiber object
-int tiber_join(tiber* tb, void** return_value);
+int tiber_join(tiber* tb, void** return_value_p); // return_value_p is passed NULL, if you do not want to catch the return value
 int tiber_detach(tiber* tb);
 
 tiber* tiber_self(void);

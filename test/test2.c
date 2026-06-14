@@ -67,13 +67,11 @@ int tiber_main()
 	for(unsigned long long int i = 0; i < TASKS_WITH_TIMEOUTS; i++)
 		tb2[i] = new_tiber(NULL, tb2_func, NULL, STACK_SIZE, 0, NULL, NULL);
 
-	void* result = NULL;
-
 	for(unsigned long long int i = 0; i < TASKS_WITHOUT_TIMEOUTS; i++)
-		tiber_join(tb1[i], &result);
+		tiber_join(tb1[i], NULL);
 
 	for(unsigned long long int i = 0; i < TASKS_WITH_TIMEOUTS; i++)
-		tiber_join(tb2[i], &result);
+		tiber_join(tb2[i], NULL);
 
 	tiber_mutex_destroy(&counter_lock);
 	tiber_mutex_destroy(&missed_counter_lock);

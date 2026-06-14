@@ -64,11 +64,10 @@ int tiber_main()
 	pthread_create(&cpt, NULL, consumer, NULL);
 	tiber* ct = new_tiber(NULL, consumer, NULL, 2 * 1024 * 1024, 0, NULL, NULL);
 
-	void* return_value;
-	pthread_join(ppt, &return_value);
-	tiber_join(pt, &return_value);
-	pthread_join(cpt, &return_value);
-	tiber_join(ct, &return_value);
+	pthread_join(ppt, NULL);
+	tiber_join(pt, NULL);
+	pthread_join(cpt, NULL);
+	tiber_join(ct, NULL);
 
 	deinitialize_tiber_channel(&tch);
 	deinitialize_tiber_channel(&completed);

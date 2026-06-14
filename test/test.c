@@ -216,8 +216,7 @@ void* tb9_func(void* p)
 
 	for(int i = 1; i <= 8; i++)
 	{
-		void* return_value;
-		tiber_join(tb[i], &return_value);
+		tiber_join(tb[i], NULL);
 		printf("joined %d tiber @ %lu\n", i, millis_since_start());
 	}
 
@@ -247,8 +246,7 @@ int tiber_main()
 	tb[8] = new_tiber(NULL, tb8_func, NULL, STACK_SIZE, 0, NULL, NULL);
 	tb[9] = new_tiber(NULL, tb9_func, tb, STACK_SIZE, 0, NULL, NULL);
 
-	void* return_value;
-	tiber_join(tb[9], &return_value);
+	tiber_join(tb[9], NULL);
 	printf("joined %d tiber @ %lu\n", 9, millis_since_start());
 
 	tiber_mutex_destroy(&lock);

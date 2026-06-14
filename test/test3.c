@@ -183,13 +183,11 @@ int tiber_main()
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
 		ctb[i] = new_tiber(NULL, consumer_func, NULL, STACK_SIZE, 0, NULL, NULL);
 
-	void* result_temp = NULL;
-
 	for(unsigned long long int i = 0; i < PRODUCER_TASKS; i++)
-		tiber_join(ptb[i], &result_temp);
+		tiber_join(ptb[i], NULL);
 
 	for(unsigned long long int i = 0; i < CONSUMER_TASKS; i++)
-		tiber_join(ctb[i], &result_temp);
+		tiber_join(ctb[i], NULL);
 
 	printf("result count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(result.iq)));
 	printf("missed count = %"PRIu_cy_uint"\n", get_element_count_int_queue(&(missed.iq)));

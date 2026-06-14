@@ -212,8 +212,7 @@ void deinitialize_tiber_io()
 	close(global_tiber_io.epoll_fd);
 
 	// wait for tiber to finish
-	void* result;
-	tiber_join(global_tiber_io.io_loop, &result);
+	tiber_join(global_tiber_io.io_loop, NULL);
 
 	// delete the tiber runtime
 	delete_tiber_runtime(global_tiber_io.io_runtime);

@@ -231,7 +231,7 @@ void delete_tiber(tiber* tb)
 		free(tb);
 }
 
-int tiber_join(tiber* tb, void** return_value)
+int tiber_join(tiber* tb, void** return_value_p)
 {
 	pthread_spin_lock(&(tb->state_lock));
 	int can_be_joined = !(tb->is_detached);
@@ -240,8 +240,12 @@ int tiber_join(tiber* tb, void** return_value)
 	if(!can_be_joined)
 		return EINVAL;
 
-	// we got the return value, it must now have been killed so delete the tiber
-	(*return_value) = get_tiber_result(&(tb->result));
+	// we got the return value, it must now have been killed so delete the tiber, after fetching the return value
+	{
+		void* return_value = get_tiber_result(&(tb->result));
+		if(return_value_p != NULL) // set return_value_p only if it is passed
+			(*return_value_p) = return_value;
+	}
 
 	// loop continuously while it's reference count does not reach 0
 	while(fetch_tiber_reference_count(tb) > 0){}

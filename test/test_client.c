@@ -122,9 +122,8 @@ int tiber_main()
 	for(int i = 0; i < sizeof(tb)/sizeof(tb[0]); i++)
 		tb[i] = new_tiber(NULL, make_1000_requests, NULL, 512*1024, 0, NULL, NULL);
 
-	void* result = NULL;
 	for(int i = 0; i < sizeof(tb)/sizeof(tb[0]); i++)
-		tiber_join(tb[i], &result);
+		tiber_join(tb[i], NULL);
 
 	return 0;
 }
