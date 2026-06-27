@@ -153,6 +153,10 @@ cy_uint read_from_tiber_channel(tiber_channel* tch, void* data, cy_uint data_siz
 		if((bytes_read = read_from_dpipe(&(tch->channel), data, data_size, op_type)))
 			break;
 
+		// if closed break, we read nothing and we might read nothing, if we are closed
+		if(is_dpipe_closed(&(tch->channel)))
+			break;
+
 		// wait for timeout
 		if(tiber_cond_timedwait_for_microseconds(&(tch->readers_wait), &(tch->lock), &timeout_in_microseconds))
 			break;
